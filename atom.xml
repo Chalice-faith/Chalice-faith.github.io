@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-  <title>Hexo</title>
+  <title>Chalice的个人博客</title>
   
   
-  <link href="http://example.com/atom.xml" rel="self"/>
+  <link href="https://github.com/Chalice-faith/atom.xml" rel="self"/>
   
-  <link href="http://example.com/"/>
+  <link href="https://github.com/Chalice-faith/"/>
   <updated>2025-09-21T11:31:50.363Z</updated>
-  <id>http://example.com/</id>
+  <id>https://github.com/Chalice-faith/</id>
   
   <author>
-    <name>John Doe</name>
+    <name>Chalice</name>
     
   </author>
   
@@ -18,8 +18,8 @@
   
   <entry>
     <title>hello myblog</title>
-    <link href="http://example.com/2025/09/21/hello-myblog/"/>
-    <id>http://example.com/2025/09/21/hello-myblog/</id>
+    <link href="https://github.com/Chalice-faith/2025/09/21/hello-myblog/"/>
+    <id>https://github.com/Chalice-faith/2025/09/21/hello-myblog/</id>
     <published>2025-09-21T11:31:50.000Z</published>
     <updated>2025-09-21T11:31:50.363Z</updated>
     
@@ -31,8 +31,8 @@
   
   <entry>
     <title>Hello World</title>
-    <link href="http://example.com/2025/09/21/hello-world/"/>
-    <id>http://example.com/2025/09/21/hello-world/</id>
+    <link href="https://github.com/Chalice-faith/2025/09/21/hello-world/"/>
+    <id>https://github.com/Chalice-faith/2025/09/21/hello-world/</id>
     <published>2025-09-21T10:27:17.111Z</published>
     <updated>2025-09-21T10:27:17.111Z</updated>
     
