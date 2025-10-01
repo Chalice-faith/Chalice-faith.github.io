@@ -145,6 +145,85 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/10/01/Golang%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Chalice">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Chalice 的技术博客">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/10/01/Golang%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE/" class="post-title-link" itemprop="url">Golang环境配置</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-10-01 09:07:54 / 修改时间：12:42:42" itemprop="dateCreated datePublished" datetime="2025-10-01T09:07:54+08:00">2025-10-01</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="Golang开发环境"><a href="#Golang开发环境" class="headerlink" title="Golang开发环境"></a>Golang开发环境</h2><h3 id="下载安装包"><a href="#下载安装包" class="headerlink" title="下载安装包"></a>下载安装包</h3><p>Go官网下载地址：<a target="_blank" rel="noopener" href="https://golang.org/dl/">https://golang.org/dl/</a></p>
+<p>Go官方镜像站（推荐）：<a target="_blank" rel="noopener" href="https://golang.google.cn/dl/">https://golang.google.cn/dl/</a></p>
+<p>根据自己系统，自行选择安装。如果是window系统 推荐下载可执行文件版,一路 Next。</p>
+<h3 id="配置环境变量"><a href="#配置环境变量" class="headerlink" title="配置环境变量"></a>配置环境变量</h3><p>GOROOT是安装包bin\go.exe所在的路径，GOPATH是Go工具包所在的路径。新增以下用户变量</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">GOROOT = E:\Github\Go;//Go安装位置</span><br><span class="line">GOPATH = E:\GoProject;//Go项目文件位置</span><br></pre></td></tr></table></figure>
+
+<p>右击桌面左下角【开始】–》设置 –》输入”环境”关键字，选择”编辑系统环境变量” –》环境变量 –》用户变量 –》Path –》编辑 ，新增以下内容</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Path = %GOROOT%\bin;%GOPATH%\bin;</span><br></pre></td></tr></table></figure>
+
+<h3 id="配置Go代理和Go包校验方式"><a href="#配置Go代理和Go包校验方式" class="headerlink" title="配置Go代理和Go包校验方式"></a>配置Go代理和Go包校验方式</h3><p>win+r打开cmd，在命令行输入以下命令：</p>
+<figure class="highlight cmd"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">go env -w GOPROXY=https://goproxy.cn,direct</span><br><span class="line">go env -w GOSUMDB=sum.golang.google.cn</span><br></pre></td></tr></table></figure>
+
+<h3 id="验证Go环境"><a href="#验证Go环境" class="headerlink" title="验证Go环境"></a>验证Go环境</h3><p>在cmd中输入</p>
+<figure class="highlight cmd"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">go env</span><br></pre></td></tr></table></figure>
+
+<p>查看GOPROXY和GOSUMDB是否修改成功，成功则在windows环境下配置完成。</p>
+<h3 id="编写代码"><a href="#编写代码" class="headerlink" title="编写代码"></a>编写代码</h3><p>环境配置完成，编写以下代码并运行以测试环境是否能正常使用。</p>
+<p>在Go项目项目文件创建一个test文件夹，进入文件夹创建一个名为test.go的文件，并输入以下代码：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"><span class="keyword">import</span> fmt</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span></span>&#123;</span><br><span class="line">    fmt.Println(<span class="string">&quot;Hello Golang!&quot;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>最后运行成功，可以开始编写你的Golang代码了。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/25/C-%E7%9A%84%E7%A7%BB%E5%8A%A8%E8%AF%AD%E4%B9%89%E5%92%8C%E5%AE%8C%E7%BE%8E%E8%BD%AC%E5%8F%91/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -767,7 +846,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">5</span>
+          <span class="site-state-item-count">6</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
