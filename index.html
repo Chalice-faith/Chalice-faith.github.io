@@ -17,18 +17,18 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+    var CONFIG = {"hostname":"chalice-faith.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
   <meta property="og:type" content="website">
 <meta property="og:title" content="Chalice 的技术博客">
-<meta property="og:url" content="http://example.com/index.html">
+<meta property="og:url" content="https://chalice-faith.github.io/index.html">
 <meta property="og:site_name" content="Chalice 的技术博客">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:author" content="Chalice">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="http://example.com/">
+<link rel="canonical" href="https://chalice-faith.github.io/">
 
 
 <script id="page-configurations">
@@ -145,7 +145,129 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2025/10/05/Linux%E4%B8%AD%E7%9A%84%E7%BD%91%E7%BB%9CIO%E5%A4%8D%E7%94%A8%E5%B9%B6%E5%8F%91%E6%A8%A1%E5%9E%8B/">
+    <link itemprop="mainEntityOfPage" href="https://chalice-faith.github.io/2025/10/08/Epoll/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Chalice">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Chalice 的技术博客">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/10/08/Epoll/" class="post-title-link" itemprop="url">Epoll</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-10-08 14:43:17 / 修改时间：15:00:05" itemprop="dateCreated datePublished" datetime="2025-10-08T14:43:17+08:00">2025-10-08</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="EPOLL"><a href="#EPOLL" class="headerlink" title="EPOLL"></a>EPOLL</h1><p>本章主要简述epoll的基础理论知识。</p>
+<h3 id="流？I-O操作-阻塞"><a href="#流？I-O操作-阻塞" class="headerlink" title="流？I&#x2F;O操作&#x2F;阻塞"></a>流？I&#x2F;O操作&#x2F;阻塞</h3><h4 id="流"><a href="#流" class="headerlink" title="流"></a>流</h4><ul>
+<li>可以进行I&#x2F;O操作的内核对象</li>
+<li>文件、管道、套接字……</li>
+<li>流的入口：文件描述符(fd)</li>
+</ul>
+<h4 id="I-O操作"><a href="#I-O操作" class="headerlink" title="I&#x2F;O操作"></a>I&#x2F;O操作</h4><p><img src="/.com//1648521298617-bac69f76-588a-4aff-a339-0242a13c145b.webp" alt="io操作01.png"></p>
+<p><img src="/.com//1648521309371-806722a5-fc1a-4600-a0bb-537d325ae85d.webp" alt="io操作02.png"></p>
+<p>所有对流的读写操作，我们都可以称之为IO操作。</p>
+<p><em>那么当一个流中再没有数据，read的时候，或者说在流中已经写满了数据，再write，我们的IO操作就会出现一种现象，就是阻塞现象。</em></p>
+<h4 id="阻塞"><a href="#阻塞" class="headerlink" title="阻塞"></a>阻塞</h4><p><img src="/.com//1648521347097-ddeb642c-149f-451a-9978-8378066d31b3.webp" alt="阻塞01.png"></p>
+<p><img src="/.com//1648521352950-297d5efa-50ca-4eba-9ee0-157ba295bbef.webp" alt="阻塞02.png"></p>
+<ul>
+<li>阻塞等待</li>
+</ul>
+<p>空出大脑可以安心睡觉。（不占用CPU宝贵的时间片）</p>
+<ul>
+<li>非阻塞，忙轮询</li>
+</ul>
+<p>浪费时间，浪费电话费，占用快递员时间（占用CPU，系统资源）</p>
+<h3 id="解决阻塞死等待的办法"><a href="#解决阻塞死等待的办法" class="headerlink" title="解决阻塞死等待的办法"></a>解决阻塞死等待的办法</h3><h4 id="阻塞死等待的缺点"><a href="#阻塞死等待的缺点" class="headerlink" title="阻塞死等待的缺点"></a>阻塞死等待的缺点</h4><p><img src="/.com//1648788062409-833f5a1b-b2ff-4a7e-ac6e-b6eccf80e60e.webp" alt="解决阻塞01.png"></p>
+<h4 id="办法一：非阻塞、忙轮询"><a href="#办法一：非阻塞、忙轮询" class="headerlink" title="办法一：非阻塞、忙轮询"></a>办法一：非阻塞、忙轮询</h4><p><img src="/.com//1648787955604-05973307-06e1-4418-a945-4ac6e6d752a5.webp" alt="解决阻塞02.png"></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">while <span class="literal">true</span> &#123;</span><br><span class="line">    <span class="keyword">for</span> i in 流[] &#123;</span><br><span class="line">        <span class="keyword">if</span> i has 数据 &#123;</span><br><span class="line">            读 或者 其他处理</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="办法二：select"><a href="#办法二：select" class="headerlink" title="办法二：select"></a>办法二：select</h4><p><img src="/.com//1648787982672-9da9b79d-96b1-46e7-9059-82bcc429977a.webp" alt="解决阻塞03.png"></p>
+<h4 id="办法三：epoll"><a href="#办法三：epoll" class="headerlink" title="办法三：epoll"></a>办法三：epoll</h4><p><img src="/.com//1648788092230-e19de60d-27b5-4b3d-a1ba-c26f1546b884.webp" alt="解决阻塞04.png"></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">while <span class="literal">true</span> &#123;</span><br><span class="line">    可处理的流[] = epoll_wait(epoll_fd);  <span class="comment">//阻塞</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> i in 可处理的流[] &#123;</span><br><span class="line">        读 或者 其他处理</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="什么是epoll"><a href="#什么是epoll" class="headerlink" title="什么是epoll"></a>什么是epoll</h3><ul>
+<li><p>与select，poll一样，对I&#x2F;O多路复用的技术</p>
+</li>
+<li><p>只关心“活跃”的链接，无需遍历全部描述符集合</p>
+</li>
+<li><p>能够处理大量的链接请求(系统可以打开的文件数目)</p>
+</li>
+</ul>
+<h3 id="epoll-API"><a href="#epoll-API" class="headerlink" title="epoll API"></a>epoll API</h3><h4 id="创建EPOLL"><a href="#创建EPOLL" class="headerlink" title="创建EPOLL"></a>创建EPOLL</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * @param size 告诉内核监听的数目</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * @returns 返回一个epoll句柄（即一个文件描述符）</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="type">int</span> <span class="title function_">epoll_create</span><span class="params">(<span class="type">int</span> size)</span>;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> epfd = epoll_create(<span class="number">1000</span>);</span><br></pre></td></tr></table></figure>
+
+<p><img src="/.com//1648788201363-5356645b-0116-4c7d-8477-de2535c47e4b.webp" alt="epoll-api01.png"></p>
+<h4 id="控制EPOLL"><a href="#控制EPOLL" class="headerlink" title="控制EPOLL"></a>控制EPOLL</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * @param epfd 用epoll_create所创建的epoll句柄</span></span><br><span class="line"><span class="comment"> * @param op 表示对epoll监控描述符控制的动作</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * EPOLL_CTL_ADD(注册新的fd到epfd)</span></span><br><span class="line"><span class="comment"> * EPOLL_CTL_MOD(修改已经注册的fd的监听事件)</span></span><br><span class="line"><span class="comment"> * EPOLL_CTL_DEL(epfd删除一个fd)</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * @param fd 需要监听的文件描述符</span></span><br><span class="line"><span class="comment"> * @param event 告诉内核需要监听的事件</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * @returns 成功返回0，失败返回-1, errno查看错误信息</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="type">int</span> <span class="title function_">epoll_ctl</span><span class="params">(<span class="type">int</span> epfd, <span class="type">int</span> op, <span class="type">int</span> fd, </span></span><br><span class="line"><span class="params">            <span class="keyword">struct</span> epoll_event *event)</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">epoll_event</span> &#123;</span></span><br><span class="line"> <span class="type">__uint32_t</span> events; <span class="comment">/* epoll 事件 */</span></span><br><span class="line"> <span class="type">epoll_data_t</span> data; <span class="comment">/* 用户传递的数据 */</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * events : &#123;EPOLLIN, EPOLLOUT, EPOLLPRI, </span></span><br><span class="line"><span class="comment">            EPOLLHUP, EPOLLET, EPOLLONESHOT&#125;</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">union</span> <span class="title">epoll_data</span> &#123;</span></span><br><span class="line">    <span class="type">void</span> *ptr;</span><br><span class="line">    <span class="type">int</span> fd;</span><br><span class="line">    <span class="type">uint32_t</span> u32;</span><br><span class="line">    <span class="type">uint64_t</span> u64;</span><br><span class="line">&#125; <span class="type">epoll_data_t</span>;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">epoll_event</span> <span class="title">new_event</span>;</span></span><br><span class="line"></span><br><span class="line">new_event.events = EPOLLIN | EPOLLOUT;</span><br><span class="line">new_event.data.fd = <span class="number">5</span>;</span><br><span class="line"></span><br><span class="line">epoll_ctl(epfd, EPOLL_CTL_ADD, <span class="number">5</span>, &amp;new_event);</span><br></pre></td></tr></table></figure>
+
+<p><img src="/.com//1648788239338-54127006-2e32-49ea-adca-5cbffcb0cec0.webp" alt="epoll-api02.png"></p>
+<h4 id="等待EPOLL"><a href="#等待EPOLL" class="headerlink" title="等待EPOLL"></a>等待EPOLL</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * @param epfd 用epoll_create所创建的epoll句柄</span></span><br><span class="line"><span class="comment"> * @param event 从内核得到的事件集合</span></span><br><span class="line"><span class="comment"> * @param maxevents 告知内核这个events有多大,</span></span><br><span class="line"><span class="comment"> *             注意: 值 不能大于创建epoll_create()时的size.</span></span><br><span class="line"><span class="comment"> * @param timeout 超时时间</span></span><br><span class="line"><span class="comment"> *     -1: 永久阻塞</span></span><br><span class="line"><span class="comment"> *     0: 立即返回，非阻塞</span></span><br><span class="line"><span class="comment"> *     &gt;0: 指定微秒</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * @returns 成功: 有多少文件描述符就绪,时间到时返回0</span></span><br><span class="line"><span class="comment"> *          失败: -1, errno 查看错误</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="type">int</span> <span class="title function_">epoll_wait</span><span class="params">(<span class="type">int</span> epfd, <span class="keyword">struct</span> epoll_event *event, </span></span><br><span class="line"><span class="params">            <span class="type">int</span> maxevents, <span class="type">int</span> timeout)</span>;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">epoll_event</span> <span class="title">my_event</span>[1000];</span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> event_cnt = epoll_wait(epfd, my_event, <span class="number">1000</span>, <span class="number">-1</span>);</span><br></pre></td></tr></table></figure>
+
+<p><img src="/.com//1648788251180-ad757c0a-2f90-48aa-8292-e5417e646cc6.webp" alt="epoll-api03.png"></p>
+<h4 id="epoll编程框架"><a href="#epoll编程框架" class="headerlink" title="epoll编程框架"></a>epoll编程框架</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//创建 epoll</span></span><br><span class="line"><span class="type">int</span> epfd = epoll_crete(<span class="number">1000</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">//将 listen_fd 添加进 epoll 中</span></span><br><span class="line">epoll_ctl(epfd, EPOLL_CTL_ADD, listen_fd,&amp;listen_event);</span><br><span class="line"></span><br><span class="line"><span class="keyword">while</span> (<span class="number">1</span>) &#123;</span><br><span class="line">    <span class="comment">//阻塞等待 epoll 中 的fd 触发</span></span><br><span class="line">    <span class="type">int</span> active_cnt = epoll_wait(epfd, events, <span class="number">1000</span>, <span class="number">-1</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">0</span> ; i &lt; active_cnt; i++) &#123;</span><br><span class="line">        <span class="keyword">if</span> (evnets[i].data.fd == listen_fd) &#123;</span><br><span class="line">            <span class="comment">//accept. 并且将新accept 的fd 加进epoll中.</span></span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span> <span class="keyword">if</span> (events[i].events &amp; EPOLLIN) &#123;</span><br><span class="line">            <span class="comment">//对此fd 进行读操作</span></span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span> <span class="keyword">if</span> (events[i].events &amp; EPOLLOUT) &#123;</span><br><span class="line">            <span class="comment">//对此fd 进行写操作</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="触发模式"><a href="#触发模式" class="headerlink" title="触发模式"></a>触发模式</h3><h4 id="水平触发"><a href="#水平触发" class="headerlink" title="水平触发"></a>水平触发</h4><p><img src="/.com//1648788347586-9527ebd4-c109-47e0-85c3-918876732978.webp" alt="epoll触发模式01.png"></p>
+<p><img src="/.com//1648788353383-5511612c-4222-48a1-84b7-f40ca19dc9ae.webp" alt="epoll触发模式02.png"></p>
+<p>水平触发的主要特点是，如果用户在监听epoll事件，当内核有事件的时候，会拷贝给用户态事件，但是如果用户只处理了一次，那么剩下没有处理的会在下一次epoll_wait再次返回该事件。</p>
+<p>这样如果用户永远不处理这个事件，就导致每次都会有该事件从内核到用户的拷贝，耗费性能，但是水平触发相对安全，最起码事件不会丢掉，除非用户处理完毕。</p>
+<h4 id="边缘触发"><a href="#边缘触发" class="headerlink" title="边缘触发"></a>边缘触发</h4><p><img src="/.com//1648788358769-07598731-7810-46f2-8059-e1828386f5f9.webp" alt="epoll触发模式03.png"></p>
+<p><img src="/.com//1648788363448-f6531659-91b0-4657-aacc-857370736546.webp" alt="epoll触发模式04.png"></p>
+<p>边缘触发，相对跟水平触发相反，当内核有事件到达， 只会通知用户一次，至于用户处理还是不处理，以后将不会再通知。这样减少了拷贝过程，增加了性能，但是相对来说，如果用户马虎忘记处理，将会产生事件丢的情况。</p>
+<h3 id="epoll服务器示例-c语言实现"><a href="#epoll服务器示例-c语言实现" class="headerlink" title="epoll服务器示例(c语言实现)"></a>epoll服务器示例(c语言实现)</h3><h4 id="服务端"><a href="#服务端" class="headerlink" title="服务端"></a>服务端</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;ctype.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;string.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;unistd.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/types.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/socket.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;arpa/inet.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/epoll.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> SERVER_PORT         (7778)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EPOLL_MAX_NUM       (2048)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> BUFFER_MAX_LEN      (4096)</span></span><br><span class="line"></span><br><span class="line"><span class="type">char</span> buffer[BUFFER_MAX_LEN];</span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">str_toupper</span><span class="params">(<span class="type">char</span> *str)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">int</span> i;</span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; <span class="built_in">strlen</span>(str); i ++) &#123;</span><br><span class="line">        str[i] = <span class="built_in">toupper</span>(str[i]);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">(<span class="type">int</span> argc, <span class="type">char</span> **argv)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">int</span> listen_fd = <span class="number">0</span>;</span><br><span class="line">    <span class="type">int</span> client_fd = <span class="number">0</span>;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">sockaddr_in</span> <span class="title">server_addr</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">sockaddr_in</span> <span class="title">client_addr</span>;</span></span><br><span class="line">    <span class="type">socklen_t</span>           client_len;</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> epfd = <span class="number">0</span>;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">epoll_event</span> <span class="title">event</span>, *<span class="title">my_events</span>;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// socket</span></span><br><span class="line">    listen_fd = socket(AF_INET, SOCK_STREAM, <span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// bind</span></span><br><span class="line">    server_addr.sin_family = AF_INET;</span><br><span class="line">    server_addr.sin_addr.s_addr = htonl(INADDR_ANY);</span><br><span class="line">    server_addr.sin_port = htons(SERVER_PORT);</span><br><span class="line">    bind(listen_fd, (<span class="keyword">struct</span> sockaddr*)&amp;server_addr, <span class="keyword">sizeof</span>(server_addr));</span><br><span class="line"></span><br><span class="line">    <span class="comment">// listen</span></span><br><span class="line">    listen(listen_fd, <span class="number">10</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// epoll create</span></span><br><span class="line">    epfd = epoll_create(EPOLL_MAX_NUM);</span><br><span class="line">    <span class="keyword">if</span> (epfd &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        perror(<span class="string">&quot;epoll create&quot;</span>);</span><br><span class="line">        <span class="keyword">goto</span> END;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// listen_fd -&gt; epoll</span></span><br><span class="line">    event.events = EPOLLIN;</span><br><span class="line">    event.data.fd = listen_fd;</span><br><span class="line">    <span class="keyword">if</span> (epoll_ctl(epfd, EPOLL_CTL_ADD, listen_fd, &amp;event) &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        perror(<span class="string">&quot;epoll ctl add listen_fd &quot;</span>);</span><br><span class="line">        <span class="keyword">goto</span> END;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    my_events = <span class="built_in">malloc</span>(<span class="keyword">sizeof</span>(<span class="keyword">struct</span> epoll_event) * EPOLL_MAX_NUM);</span><br><span class="line">    </span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span> (<span class="number">1</span>) &#123;</span><br><span class="line">        <span class="comment">// epoll wait</span></span><br><span class="line">        <span class="type">int</span> active_fds_cnt = epoll_wait(epfd, my_events, EPOLL_MAX_NUM, <span class="number">-1</span>);</span><br><span class="line">        <span class="type">int</span> i = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; active_fds_cnt; i++) &#123;</span><br><span class="line">            <span class="comment">// if fd == listen_fd</span></span><br><span class="line">            <span class="keyword">if</span> (my_events[i].data.fd == listen_fd) &#123;</span><br><span class="line">                <span class="comment">//accept</span></span><br><span class="line">                client_fd = accept(listen_fd, (<span class="keyword">struct</span> sockaddr*)&amp;client_addr, &amp;client_len);</span><br><span class="line">                <span class="keyword">if</span> (client_fd &lt; <span class="number">0</span>) &#123;</span><br><span class="line">                    perror(<span class="string">&quot;accept&quot;</span>);</span><br><span class="line">                    <span class="keyword">continue</span>;</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="type">char</span> ip[<span class="number">20</span>];</span><br><span class="line">                <span class="built_in">printf</span>(<span class="string">&quot;new connection[%s:%d]\n&quot;</span>, inet_ntop(AF_INET, &amp;client_addr.sin_addr, ip, <span class="keyword">sizeof</span>(ip)), ntohs(client_addr.sin_port));</span><br><span class="line"></span><br><span class="line">                event.events = EPOLLIN | EPOLLET;</span><br><span class="line">                event.data.fd = client_fd;</span><br><span class="line">                epoll_ctl(epfd, EPOLL_CTL_ADD, client_fd, &amp;event);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span> <span class="keyword">if</span> (my_events[i].events &amp; EPOLLIN) &#123;</span><br><span class="line">                <span class="built_in">printf</span>(<span class="string">&quot;EPOLLIN\n&quot;</span>);</span><br><span class="line">                client_fd = my_events[i].data.fd;</span><br><span class="line"></span><br><span class="line">                <span class="comment">// do read</span></span><br><span class="line"></span><br><span class="line">                buffer[<span class="number">0</span>] = <span class="string">&#x27;\0&#x27;</span>;</span><br><span class="line">                <span class="type">int</span> n = read(client_fd, buffer, <span class="number">5</span>);</span><br><span class="line">                <span class="keyword">if</span> (n &lt; <span class="number">0</span>) &#123;</span><br><span class="line">                    perror(<span class="string">&quot;read&quot;</span>);</span><br><span class="line">                    <span class="keyword">continue</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">else</span> <span class="keyword">if</span> (n == <span class="number">0</span>) &#123;</span><br><span class="line">                    epoll_ctl(epfd, EPOLL_CTL_DEL, client_fd, &amp;event);</span><br><span class="line">                    close(client_fd);</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">else</span> &#123;</span><br><span class="line">                    <span class="built_in">printf</span>(<span class="string">&quot;[read]: %s\n&quot;</span>, buffer);</span><br><span class="line">                    buffer[n] = <span class="string">&#x27;\0&#x27;</span>;</span><br><span class="line"><span class="meta">#<span class="keyword">if</span> 1</span></span><br><span class="line">                    str_toupper(buffer);</span><br><span class="line">                    write(client_fd, buffer, <span class="built_in">strlen</span>(buffer));</span><br><span class="line">                    <span class="built_in">printf</span>(<span class="string">&quot;[write]: %s\n&quot;</span>, buffer);</span><br><span class="line">                    <span class="built_in">memset</span>(buffer, <span class="number">0</span>, BUFFER_MAX_LEN);</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">                    event.events = EPOLLOUT;</span></span><br><span class="line"><span class="comment">                    event.data.fd = client_fd;</span></span><br><span class="line"><span class="comment">                    epoll_ctl(epfd, EPOLL_CTL_MOD, client_fd, &amp;event);</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span> <span class="keyword">if</span> (my_events[i].events &amp; EPOLLOUT) &#123;</span><br><span class="line">                <span class="built_in">printf</span>(<span class="string">&quot;EPOLLOUT\n&quot;</span>);</span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">                client_fd = my_events[i].data.fd;</span></span><br><span class="line"><span class="comment">                str_toupper(buffer);</span></span><br><span class="line"><span class="comment">                write(client_fd, buffer, strlen(buffer));</span></span><br><span class="line"><span class="comment">                printf(&quot;[write]: %s\n&quot;, buffer);</span></span><br><span class="line"><span class="comment">                memset(buffer, 0, BUFFER_MAX_LEN);</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">                event.events = EPOLLIN;</span></span><br><span class="line"><span class="comment">                event.data.fd = client_fd;</span></span><br><span class="line"><span class="comment">                epoll_ctl(epfd, EPOLL_CTL_MOD, client_fd, &amp;event);</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line"></span><br><span class="line"></span><br><span class="line">END:</span><br><span class="line">    close(epfd);</span><br><span class="line">    close(listen_fd);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="客户端"><a href="#客户端" class="headerlink" title="客户端"></a>客户端</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;string.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;strings.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/types.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/socket.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;arpa/inet.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;unistd.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;fcntl.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> MAX_LINE (1024)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> SERVER_PORT (7778)</span></span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">setnoblocking</span><span class="params">(<span class="type">int</span> fd)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">int</span> opts = <span class="number">0</span>;</span><br><span class="line">    opts = fcntl(fd, F_GETFL);</span><br><span class="line">    opts = opts | O_NONBLOCK;</span><br><span class="line">    fcntl(fd, F_SETFL);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">(<span class="type">int</span> argc, <span class="type">char</span> **argv)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">int</span>  sockfd;</span><br><span class="line">    <span class="type">char</span> recvline[MAX_LINE + <span class="number">1</span>] = &#123;<span class="number">0</span>&#125;;</span><br><span class="line"></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">sockaddr_in</span> <span class="title">server_addr</span>;</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (argc != <span class="number">2</span>) &#123;</span><br><span class="line">        <span class="built_in">fprintf</span>(<span class="built_in">stderr</span>, <span class="string">&quot;usage ./client &lt;SERVER_IP&gt;\n&quot;</span>);</span><br><span class="line">        <span class="built_in">exit</span>(<span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 创建socket</span></span><br><span class="line">    <span class="keyword">if</span> ( (sockfd = socket(AF_INET, SOCK_STREAM, <span class="number">0</span>)) &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="built_in">fprintf</span>(<span class="built_in">stderr</span>, <span class="string">&quot;socket error&quot;</span>);</span><br><span class="line">        <span class="built_in">exit</span>(<span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">// server addr 赋值</span></span><br><span class="line">    bzero(&amp;server_addr, <span class="keyword">sizeof</span>(server_addr));</span><br><span class="line">    server_addr.sin_family = AF_INET;</span><br><span class="line">    server_addr.sin_port = htons(SERVER_PORT);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (inet_pton(AF_INET, argv[<span class="number">1</span>], &amp;server_addr.sin_addr) &lt;= <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="built_in">fprintf</span>(<span class="built_in">stderr</span>, <span class="string">&quot;inet_pton error for %s&quot;</span>, argv[<span class="number">1</span>]);</span><br><span class="line">        <span class="built_in">exit</span>(<span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 链接服务端</span></span><br><span class="line">    <span class="keyword">if</span> (connect(sockfd, (<span class="keyword">struct</span> sockaddr*) &amp;server_addr, <span class="keyword">sizeof</span>(server_addr)) &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        perror(<span class="string">&quot;connect&quot;</span>);</span><br><span class="line">        <span class="built_in">fprintf</span>(<span class="built_in">stderr</span>, <span class="string">&quot;connect error\n&quot;</span>); </span><br><span class="line">        <span class="built_in">exit</span>(<span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    setnoblocking(sockfd);</span><br><span class="line"></span><br><span class="line">    <span class="type">char</span> input[<span class="number">100</span>];</span><br><span class="line">    <span class="type">int</span> n = <span class="number">0</span>;</span><br><span class="line">    <span class="type">int</span> count = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 不断的从标准输入字符串</span></span><br><span class="line">    <span class="keyword">while</span> (fgets(input, <span class="number">100</span>, <span class="built_in">stdin</span>) != <span class="literal">NULL</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;[send] %s\n&quot;</span>, input);</span><br><span class="line">        n = <span class="number">0</span>;</span><br><span class="line">        <span class="comment">// 把输入的字符串发送 到 服务器中去</span></span><br><span class="line">        n = send(sockfd, input, <span class="built_in">strlen</span>(input), <span class="number">0</span>);</span><br><span class="line">        <span class="keyword">if</span> (n &lt; <span class="number">0</span>) &#123;</span><br><span class="line">            perror(<span class="string">&quot;send&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        n = <span class="number">0</span>;</span><br><span class="line">        count = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        <span class="comment">// 读取 服务器返回的数据</span></span><br><span class="line">        <span class="keyword">while</span> (<span class="number">1</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            n = read(sockfd, recvline + count, MAX_LINE);</span><br><span class="line">            <span class="keyword">if</span> (n == MAX_LINE)</span><br><span class="line">            &#123;</span><br><span class="line">                count += n;</span><br><span class="line">                <span class="keyword">continue</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span> <span class="keyword">if</span> (n &lt; <span class="number">0</span>)&#123;</span><br><span class="line">                perror(<span class="string">&quot;recv&quot;</span>);</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span> &#123;</span><br><span class="line">                count += n;</span><br><span class="line">                recvline[count] = <span class="string">&#x27;\0&#x27;</span>;</span><br><span class="line">                <span class="built_in">printf</span>(<span class="string">&quot;[recv] %s\n&quot;</span>, recvline);</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://chalice-faith.github.io/2025/10/05/Linux%E4%B8%AD%E7%9A%84%E7%BD%91%E7%BB%9CIO%E5%A4%8D%E7%94%A8%E5%B9%B6%E5%8F%91%E6%A8%A1%E5%9E%8B/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -171,6 +293,13 @@
 
               <time title="创建时间：2025-10-05 16:32:30" itemprop="dateCreated datePublished" datetime="2025-10-05T16:32:30+08:00">2025-10-05</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-10-08 16:00:06" itemprop="dateModified" datetime="2025-10-08T16:00:06+08:00">2025-10-08</time>
+              </span>
 
           
 
@@ -183,7 +312,158 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          
+          <h1 id="Linux网络Server的N种并发模型"><a href="#Linux网络Server的N种并发模型" class="headerlink" title="Linux网络Server的N种并发模型"></a>Linux网络Server的N种并发模型</h1><p>该博客参考了<a target="_blank" rel="noopener" href="https://www.yuque.com/aceld">刘丹冰Aceld · 语雀</a>文章与视频<a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV1jK4y1N7ST%E7%9A%84%E5%86%85%E5%AE%B9%EF%BC%8C%E5%8F%97%E7%9B%8A%E5%8C%AA%E6%B5%85">https://www.bilibili.com/video/BV1jK4y1N7ST的内容，受益匪浅</a></p>
+<h3 id="模型一、单线程Accept（无IO复用）"><a href="#模型一、单线程Accept（无IO复用）" class="headerlink" title="模型一、单线程Accept（无IO复用）"></a>模型一、单线程Accept（无IO复用）</h3><h4 id="1-模型结构"><a href="#1-模型结构" class="headerlink" title="(1) 模型结构"></a>(1) 模型结构</h4><p>该模型的核心逻辑如下（以 TCP 为例）：</p>
+<ol>
+<li>服务器创建监听套接字（listening socket），绑定端口并调用 <code>listen()</code>。</li>
+<li>在一个无限循环中，调用 <code>accept()</code> 等待客户端连接。</li>
+<li>每当有新连接到来，<code>accept()</code> 返回一个新的已连接套接字（connected socket）。</li>
+<li><strong>在主线程中直接对该连接进行读写处理（如 recv&#x2F;send）</strong>，处理完后再回到 <code>accept()</code> 等待下一个连接。</li>
+</ol>
+<p>伪代码示例：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> listen_fd = <span class="built_in">socket</span>(...);</span><br><span class="line"><span class="built_in">bind</span>(listen_fd, ...);</span><br><span class="line"><span class="built_in">listen</span>(listen_fd, ...);</span><br><span class="line"></span><br><span class="line"><span class="keyword">while</span> (<span class="number">1</span>) &#123;</span><br><span class="line">    <span class="type">int</span> conn_fd = <span class="built_in">accept</span>(listen_fd, <span class="literal">NULL</span>, <span class="literal">NULL</span>);  <span class="comment">// 阻塞等待连接</span></span><br><span class="line">    <span class="built_in">handle_client</span>(conn_fd);  <span class="comment">// 在主线程中处理整个会话</span></span><br><span class="line">    <span class="built_in">close</span>(conn_fd);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="/.io//1651593761496-d6687f19-63c7-4429-9fd5-171acd3ad7f0.webp" alt="158-并发模型1.jpeg"></p>
+<h4 id="2-模型分析"><a href="#2-模型分析" class="headerlink" title="(2) 模型分析"></a>(2) 模型分析</h4><p>① 主线程<code>main thread</code>执行阻塞Accept，每次客户端Connect链接过来，<code>main thread</code>中accept响应并建立连接</p>
+<p>② 创建链接成功，得到<code>Connfd1</code>套接字后, 依然在<code>main thread</code>串行处理套接字读写，并处理业务。</p>
+<p>③ 在②处理业务中，如果有新客户端<code>Connect</code>过来，<code>Server</code>无响应，直到当前套接字全部业务处理完毕。</p>
+<p>④ 当前客户端处理完后，完毕链接，处理下一个客户端请求。</p>
+<h4 id="3-优缺点"><a href="#3-优缺点" class="headerlink" title="(3) 优缺点"></a>(3) 优缺点</h4><p><strong>优点</strong>：</p>
+<ul>
+<li>socket编程流程清晰且简单，适合学习使用，了解socket基本编程流程。</li>
+</ul>
+<p><strong>缺点</strong>：</p>
+<ul>
+<li>该模型并非并发模型，是串行的服务器，同一时刻，监听并响应最大的网络请求量为<code>1</code>。 即并发量为<code>1</code>。 </li>
+<li>仅适合学习基本socket编程，不适合任何服务器Server构建</li>
+</ul>
+<h3 id="模型二、单线程Accept-多线程读写业务-无I-O多路复用"><a href="#模型二、单线程Accept-多线程读写业务-无I-O多路复用" class="headerlink" title="模型二、单线程Accept+多线程读写业务(无I&#x2F;O多路复用)"></a>模型二、单线程Accept+多线程读写业务(无I&#x2F;O多路复用)</h3><h4 id="1-模型结构-1"><a href="#1-模型结构-1" class="headerlink" title="(1) 模型结构"></a>(1) 模型结构</h4><p><strong>核心结构：</strong></p>
+<ol>
+<li><strong>主线程</strong>：只负责监听和接受新连接（调用 <code>accept()</code>）。</li>
+<li><strong>工作线程</strong>：每当有新连接到来，主线程创建一个新线程（或从线程池中分配），由该线程负责该连接的整个生命周期（包括 <code>recv</code>&#x2F;<code>send</code> 和业务逻辑处理）。</li>
+<li><strong>无 I&#x2F;O 复用</strong>：所有 I&#x2F;O 操作（<code>accept</code>、<code>recv</code>、<code>send</code>）均为<strong>阻塞式</strong>，不使用 <code>select</code>&#x2F;<code>epoll</code> 等机制。</li>
+</ol>
+<p><img src="/.io//1651593783816-bd32ec9d-ab9f-4e69-a952-21f8308fdefc.webp" alt="159-并发模型2.jpeg"></p>
+<h4 id="2-模型分析-1"><a href="#2-模型分析-1" class="headerlink" title="(2) 模型分析"></a>(2) 模型分析</h4><p>① 主线程<code>main thread</code>执行阻塞Accept，每次客户端Connect链接过来，<code>main thread</code>中accept响应并建立连接</p>
+<p>② 创建链接成功，得到<code>Connfd1</code>套接字后，创建一个新线程<code>thread1</code>用来处理客户端的读写业务。<code>main thead</code>依然回到<code>Accept</code>阻塞等待新客户端。</p>
+<p>③ <code>thread1</code>通过套接字<code>Connfd1</code>与客户端进行通信读写。</p>
+<p>④ server在②处理业务中，如果有新客户端<code>Connect</code>过来，<code>main thread</code>中<code>Accept</code>依然响应并建立连接，重复②过程。</p>
+<h4 id="3-优缺点-1"><a href="#3-优缺点-1" class="headerlink" title="(3) 优缺点"></a>(3) 优缺点</h4><p><strong>优点</strong>：</p>
+<ul>
+<li>基于<code>模型一：单线程Accept（无IO复用）</code> 支持了并发的特性。</li>
+<li>使用灵活，一个客户端对应一个线程单独处理，<code>server</code>处理业务内聚程度高，客户端无论如何写，服务端均会有一个线程做资源响应。</li>
+</ul>
+<p><strong>缺点</strong>：</p>
+<ul>
+<li>随着客户端的数量增多，需要开辟的线程也增加，客户端与server线程数量<code>1:1</code>正比关系，一次对于高并发场景，线程数量收到硬件上限瓶颈。</li>
+<li>对于长链接，客户端一旦无业务读写，只要不关闭，server的对应线程依然需要保持连接(心跳、健康监测等机制)，占用连接资源和线程开销资源浪费。</li>
+<li>仅适合客户端数量不大，并且数量可控的场景使用。</li>
+</ul>
+<p><em>仅适合学习基本socket编程，不适合任何服务器Server构建。</em></p>
+<h3 id="模型三、单线程多路IO复用"><a href="#模型三、单线程多路IO复用" class="headerlink" title="模型三、单线程多路IO复用"></a>模型三、单线程多路IO复用</h3><h4 id="1-模型结构-2"><a href="#1-模型结构-2" class="headerlink" title="(1) 模型结构"></a>(1) 模型结构</h4><p><strong>核心逻辑：</strong></p>
+<ol>
+<li><p>创建监听 socket，设为非阻塞，加入事件循环。</p>
+</li>
+<li><p>主循环调用 <code>epoll_wait()</code>（或类似）等待事件。</p>
+</li>
+<li><p>若监听 socket 可读 → 调用 <code>accept()</code> 接受新连接，设为非阻塞，加入事件集。</p>
+</li>
+<li><p>若某客户端 socket 可读 → 调用 <code>recv()</code> 读取数据（非阻塞），处理业务。</p>
+</li>
+<li><p>若需响应 → 将 socket 加入可写事件，待可写时 <code>send()</code>。</p>
+</li>
+<li><p>连接关闭时从事件集中移除。</p>
+<p><img src="/.io//1651593799111-2612c72a-c794-4c57-b668-5355fcf50be3.webp" alt="160-并发模型3.jpeg"></p>
+</li>
+</ol>
+<h4 id="2-模型分析-2"><a href="#2-模型分析-2" class="headerlink" title="(2) 模型分析"></a>(2) 模型分析</h4><p>① 主线程<code>main thread</code>创建<code>listenFd</code>之后，采用多路I&#x2F;O复用机制(如:select、epoll)进行IO状态阻塞监控。有<code>Client1</code>客户端<code>Connect</code>请求，I&#x2F;O复用机制检测到<code>ListenFd</code>触发读事件，则进行<code>Accept</code>建立连接，并将新生成的<code>connFd1</code>加入到<code>监听I/O集合</code>中。</p>
+<p>② <code>Client1</code>再次进行正常读写业务请求，<code>main thread</code>的<code>多路I/O复用机制</code>阻塞返回，会触该套接字的读&#x2F;写事件等。</p>
+<p>③ 对于<code>Client1</code>的读写业务，Server依然在<code>main thread</code>执行流程提继续执行，此时如果有新的客户端<code>Connect</code>链接请求过来，Server将没有即时响应。</p>
+<p>④ 等到Server处理完一个连接的<code>Read+Write</code>操作，继续回到<code>多路I/O复用机制</code>阻塞，其他链接过来重复   ②、③流程。</p>
+<h4 id="3-优缺点-2"><a href="#3-优缺点-2" class="headerlink" title="(3) 优缺点"></a>(3) 优缺点</h4><p><strong>优点</strong>：</p>
+<ul>
+<li>单流程解决了可以同时监听多个客户端读写状态的模型，不需要<code>1:1</code>与客户端的线程数量关系。</li>
+<li>多路I&#x2F;O复用阻塞，非忙询状态，不浪费CPU资源， CPU利用率较高。</li>
+</ul>
+<p><strong>缺点</strong>：</p>
+<ul>
+<li>虽然可以监听多个客户端的读写状态，但是同一时间内，只能处理一个客户端的读写操作，实际上读写的业务并发为1。</li>
+<li>多客户端访问Server，业务为串行执行，大量请求会有排队延迟现象，如图中⑤所示，当<code>Client3</code>占据<code>main thread</code>流程时，<code>Client1,Client2</code>流程卡在<code>IO复用</code>等待下次监听触发事件。</li>
+</ul>
+<h3 id="模型四、单线程多路IO复用-多线程读写业务-业务工作池"><a href="#模型四、单线程多路IO复用-多线程读写业务-业务工作池" class="headerlink" title="模型四、单线程多路IO复用+多线程读写业务(业务工作池)"></a>模型四、单线程多路IO复用+多线程读写业务(业务工作池)</h3><h4 id="1-模型结构-3"><a href="#1-模型结构-3" class="headerlink" title="(1) 模型结构"></a>(1) 模型结构</h4><p><img src="/.io//1651593821792-89521ed3-0746-44da-9a87-167caa946018.webp" alt="161-并发模型4.jpeg"></p>
+<h4 id="2-模型分析-3"><a href="#2-模型分析-3" class="headerlink" title="(2) 模型分析"></a>(2) 模型分析</h4><p>① 主线程<code>main thread</code>创建<code>listenFd</code>之后，采用多路I&#x2F;O复用机制(如:select、epoll)进行IO状态阻塞监控。有<code>Client1</code>客户端<code>Connect</code>请求，I&#x2F;O复用机制检测到<code>ListenFd</code>触发读事件，则进行<code>Accept</code>建立连接，并将新生成的<code>connFd1</code>加入到<code>监听I/O集合</code>中。</p>
+<p>② 当<code>connFd1</code>有可读消息，触发读事件，并且进行读写消息</p>
+<p>③ <code>main thread</code>按照固定的协议读取消息，并且交给<code>worker pool</code>工作线程池， 工作线程池在server启动之前就已经开启固定数量的<code>thread</code>，里面的线程只处理消息业务，不进行套接字读写操作。</p>
+<p>④ 工作池处理完业务，触发<code>connFd1</code>写事件，将回执客户端的消息通过<code>main thead</code>写给对方。</p>
+<h4 id="3-优缺点-3"><a href="#3-优缺点-3" class="headerlink" title="(3) 优缺点"></a>(3) 优缺点</h4><p><strong>优点</strong>：</p>
+<ul>
+<li>对于<code>模型三</code>, 将业务处理部分，通过工作池分离出来，减少多客户端访问Server，业务为串行执行，大量请求会有排队延迟时间。</li>
+<li>实际上读写的业务并发为1，但是业务流程并发为worker pool线程数量，加快了业务处理并行效率。</li>
+</ul>
+<p><strong>缺点</strong>：</p>
+<ul>
+<li>读写依然为<code>main thread</code>单独处理，最高读写并行通道依然为1.</li>
+<li>虽然多个worker线程处理业务，但是最后返回给客户端，依旧需要排队，因为出口还是<code>main thread</code>的<code>Read + Write</code></li>
+</ul>
+<h3 id="模型五、单线程IO复用-多线程IO复用-链接线程池"><a href="#模型五、单线程IO复用-多线程IO复用-链接线程池" class="headerlink" title="模型五、单线程IO复用+多线程IO复用(链接线程池)"></a>模型五、单线程IO复用+多线程IO复用(链接线程池)</h3><h4 id="1-模型结构-4"><a href="#1-模型结构-4" class="headerlink" title="(1) 模型结构"></a>(1) 模型结构</h4><p><strong>核心逻辑：</strong></p>
+<ol>
+<li>主线程创建监听 socket，加入自己的 epoll（或直接阻塞 accept）。</li>
+<li>启动 N 个工作线程，每个线程创建自己的 epoll 实例。</li>
+<li>主线程 <code>accept()</code> 到新连接后，<strong>将该连接的 fd 通过管道&#x2F;消息队列传递给某个工作线程</strong>。</li>
+<li>工作线程收到 fd 后，将其加入自己的 epoll，后续所有 I&#x2F;O 在该线程完成。</li>
+<li>业务逻辑可在 I&#x2F;O 线程中同步执行（如 Redis），或再提交到业务线程池</li>
+</ol>
+<p><img src="/.io//1651593840154-1bca60e9-2440-44b3-a22a-1f11eb126ce9.webp" alt="162-并发模型5.jpeg"></p>
+<p>模拟代码(go实现)：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">worker</span><span class="params">(id <span class="type">int</span>, listener net.Listener)</span></span> &#123;</span><br><span class="line">	fmt.Printf(<span class="string">&quot;Worker %d started\n&quot;</span>, id)</span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		conn, err := listener.Accept()</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			log.Printf(<span class="string">&quot;Worker %d accept error: %v&quot;</span>, id, err)</span><br><span class="line">			<span class="keyword">continue</span></span><br><span class="line">		&#125;</span><br><span class="line">		<span class="comment">// 在本 goroutine 中处理整个连接（I/O + 业务）</span></span><br><span class="line">		<span class="keyword">go</span> handleConnection(conn) <span class="comment">// 或直接 handle（若业务轻量）</span></span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">handleConnection</span><span class="params">(conn net.Conn)</span></span> &#123;</span><br><span class="line">	<span class="keyword">defer</span> conn.Close()</span><br><span class="line">	reader := bufio.NewReader(conn)</span><br><span class="line">	buf := <span class="built_in">make</span>([]<span class="type">byte</span>, <span class="number">1024</span>)</span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		n, err := reader.Read(buf)</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		&#125;</span><br><span class="line">		conn.Write(buf[:n]) <span class="comment">// echo</span></span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	listener, err := net.Listen(<span class="string">&quot;tcp&quot;</span>, <span class="string">&quot;:8080&quot;</span>)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Fatal(err)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">defer</span> listener.Close()</span><br><span class="line"></span><br><span class="line">	numWorkers := <span class="number">4</span></span><br><span class="line">	<span class="keyword">var</span> wg sync.WaitGroup</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; numWorkers; i++ &#123;</span><br><span class="line">		wg.Add(<span class="number">1</span>)</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">(id <span class="type">int</span>)</span></span> &#123;</span><br><span class="line">			<span class="keyword">defer</span> wg.Done()</span><br><span class="line">			worker(id, listener)</span><br><span class="line">		&#125;(i)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	fmt.Println(<span class="string">&quot;Multi-Reactor Go server on :8080&quot;</span>)</span><br><span class="line">	wg.Wait()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="2-模型分析-4"><a href="#2-模型分析-4" class="headerlink" title="(2) 模型分析"></a>(2) 模型分析</h4><p>① Server在启动监听之前，开辟固定数量(N)的线程，用<code>Thead Pool</code>线程池管理</p>
+<p>② 主线程<code>main thread</code>创建<code>listenFd</code>之后，采用多路I&#x2F;O复用机制(如:select、epoll)进行IO状态阻塞监控。有<code>Client1</code>客户端<code>Connect</code>请求，I&#x2F;O复用机制检测到<code>ListenFd</code>触发读事件，则进行<code>Accept</code>建立连接，并将新生成的<code>connFd1</code>分发给<code>Thread Pool</code>中的某个线程进行监听。</p>
+<p>③ <code>Thread Pool</code>中的每个<code>thread</code>都启动<code>多路I/O复用机制(select、epoll)</code>,用来监听<code>main thread</code>建立成功并且分发下来的socket套接字。</p>
+<p>④ 如图， <code>thread</code>监听<code>ConnFd1、ConnFd2</code>, <code>thread2</code>监听<code>ConnFd3</code>,<code>thread3</code>监听<code>ConnFd4</code>. 当对应的<code>ConnFd</code>有读写事件，对应的线程处理该套接字的读写及业务。</p>
+<h4 id="3-优缺点-4"><a href="#3-优缺点-4" class="headerlink" title="(3) 优缺点"></a>(3) 优缺点</h4><p><strong>优点</strong>：</p>
+<ul>
+<li>将<code>main thread</code>的单流程读写，分散到多线程完成，这样增加了同一时刻的读写并行通道，并行通道数量<code>N</code>， <code>N</code>为线程池<code>Thread</code>数量。</li>
+<li>server同时监听的<code>ConnFd套接字</code>数量几乎成倍增大，之前的全部监控数量取决于<code>main thread</code>的<code>多路I/O复用机制</code>的最大限制***(select 默认为1024， epoll默认与内存大小相关，约3<del>6w不等)***，所以理论单点Server最高响应并发数量为&#96;N*(3</del>6W)<code>(</code>N<code>为线程池</code>Thread&#96;数量，建议与CPU核心成比例1:1)。</li>
+<li>如果良好的线程池数量和CPU核心数适配，那么可以尝试CPU核心与Thread进行绑定，从而降低CPU的切换频率，提升每个<code>Thread</code>处理合理业务的效率，降低CPU切换成本开销。</li>
+</ul>
+<p><strong>缺点</strong>：</p>
+<ul>
+<li>虽然监听的并发数量提升，但是最高读写并行通道依然为<code>N</code>，而且多个身处同一个Thread的客户端，会出现读写延迟现象，实际上每个<code>Thread</code>的模型特征与<code>模型三：单线程多路IO复用</code>一致。</li>
+</ul>
+<h3 id="模型五-进程版-、单进程多路I-O复用-多进程多路I-O复用-进程池"><a href="#模型五-进程版-、单进程多路I-O复用-多进程多路I-O复用-进程池" class="headerlink" title="模型五(进程版)、单进程多路I&#x2F;O复用+多进程多路I&#x2F;O复用(进程池)"></a>模型五(进程版)、<strong>单进程多路I&#x2F;O复用+多进程多路I&#x2F;O复用(进程池)</strong></h3><h4 id="1-模型结构-5"><a href="#1-模型结构-5" class="headerlink" title="(1) 模型结构"></a>(1) 模型结构</h4><p><img src="/.io//1651593860312-e107f7b3-3efc-498f-85a7-53524914e0c3.webp" alt="163-并发模型6.jpeg"></p>
+<h4 id="2-模型分析-5"><a href="#2-模型分析-5" class="headerlink" title="(2) 模型分析"></a>(2) 模型分析</h4><p>与<code>五、单线程IO复用+多线程IO复用(链接线程池)</code>无大差异。</p>
+<p>不同处</p>
+<ul>
+<li>进程和线程的内存布局不同导致，<code>main process</code>(主进程)不再进行<code>Accept</code>操作，而是将<code>Accept</code>过程分散到各个<code>子进程(process)</code>中.</li>
+<li>进程的特性，资源独立，所以<code>main process</code>如果Accept成功的fd，其他进程无法共享资源，所以需要各子进程自行Accept创建链接</li>
+<li><code>main process</code>只是监听<code>ListenFd</code>状态，一旦触发读事件(有新连接请求). 通过一些IPC(进程间通信：如信号、共享内存、管道)等, 让各自子进程<code>Process</code>竞争<code>Accept</code>完成链接建立，并各自监听。</li>
+</ul>
+<h4 id="3-优缺点-5"><a href="#3-优缺点-5" class="headerlink" title="(3) 优缺点"></a>(3) 优缺点</h4><p>与<code>五、单线程IO复用+多线程IO复用(链接线程池)</code>无大差异。</p>
+<p><strong>不同处:</strong></p>
+<p>多进程内存资源空间占用稍微大一些</p>
+<p>多进程模型安全稳定型较强，这也是因为各自进程互不干扰的特点导致。</p>
+<h3 id="模型六、单线程多路I-O复用-多线程多路I-O复用-多线程"><a href="#模型六、单线程多路I-O复用-多线程多路I-O复用-多线程" class="headerlink" title="模型六、单线程多路I&#x2F;O复用+多线程多路I&#x2F;O复用+多线程"></a>模型六、<strong>单线程多路I&#x2F;O复用+多线程多路I&#x2F;O复用+多线程</strong></h3><h4 id="1-模型结构-6"><a href="#1-模型结构-6" class="headerlink" title="(1) 模型结构"></a>(1) 模型结构</h4><p><img src="/.io//1651593876692-f09acaa2-de3e-410f-8874-0bb54eb1028e.webp" alt="164-并发模型7.jpeg"></p>
+<h4 id="2-模型分析-6"><a href="#2-模型分析-6" class="headerlink" title="(2) 模型分析"></a>(2) 模型分析</h4><p>① Server在启动监听之前，开辟固定数量(N)的线程，用<code>Thead Pool</code>线程池管理</p>
+<p>② 主线程<code>main thread</code>创建<code>listenFd</code>之后，采用多路I&#x2F;O复用机制(如:select、epoll)进行IO状态阻塞监控。有<code>Client1</code>客户端<code>Connect</code>请求，I&#x2F;O复用机制检测到<code>ListenFd</code>触发读事件，则进行<code>Accept</code>建立连接，并将新生成的<code>connFd1</code>分发给<code>Thread Pool</code>中的某个线程进行监听。</p>
+<p>③ <code>Thread Pool</code>中的每个<code>thread</code>都启动<code>多路I/O复用机制(select、epoll)</code>,用来监听<code>main thread</code>建立成功并且分发下来的socket套接字。一旦其中某个被监听的客户端套接字触发<code>I/O读写事件</code>,那么，会立刻开辟一个新线程来处理<code>I/O读写</code>业务。</p>
+<p>④ 但某个读写线程完成当前读写业务，如果当前套接字没有被关闭，那么将当前客户端套接字<code>如:ConnFd3</code>重新加回线程池的监控线程中，同时自身线程自我销毁。</p>
+<h4 id="3-优缺点-6"><a href="#3-优缺点-6" class="headerlink" title="(3) 优缺点"></a>(3) 优缺点</h4><p><strong>优点</strong>：</p>
+<ul>
+<li>在<code>模型五、单线程IO复用+多线程IO复用(链接线程池)</code>基础上，除了能够保证同时响应的<code>最高并发数</code>，又能解决<code>读写并行通道</code>局限的问题。 </li>
+<li>同一时刻的读写并行通道，达到<code>最大化极限</code>，一个客户端可以对应一个单独执行流程处理读写业务，读写并行通道与客户端数量<code>1:1</code>关系。</li>
+</ul>
+<p><strong>缺点</strong>：</p>
+<ul>
+<li>该模型过于理想化，因为要求CPU核心数量足够大。</li>
+<li>如果硬件CPU数量可数(目前的硬件情况)，那么该模型将造成大量的CPU切换成本浪费。因为为了保证读写并行通道与客户端<code>1:1</code>的关系，那么Server需要开辟的<code>Thread</code>数量就与客户端一致，那么线程池中做<code>多路I/O复用</code>的监听线程池绑定CPU数量将变得毫无意义。</li>
+<li>如果每个临时的读写<code>Thread</code>都能够绑定一个单独的CPU，那么此模型将是最优模型。但是目前CPU的数量无法与客户端的数量达到一个量级，目前甚至差的不是几个量级的事。</li>
+</ul>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>综上，我们整理了7中Server的服务器处理结构模型，每个模型都有各自的特点和优势，那么对于多少应付高并发和高CPU利用率的模型，目前多数采用的是模型五(或模型五进程版，如Nginx就是类似模型五进程版的改版)。</p>
+<p>至于并发模型并非设计的约复杂越好，也不是线程开辟的越多越好，我们要考虑硬件的利用与和切换成本的开销。模型六设计就极为复杂，线程较多，但以当今的硬件能力无法支撑，反倒导致该模型性能极差。所以对于不同的业务场景也要选择适合的模型构建，并不是一定固定就要使用某个来应用。</p>
+
       
     </div>
 
@@ -202,7 +482,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2025/10/04/Golang%E5%AE%9E%E6%88%98-IMSystem1/">
+    <link itemprop="mainEntityOfPage" href="https://chalice-faith.github.io/2025/10/04/Golang%E5%AE%9E%E6%88%98-IMSystem1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -259,7 +539,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2025/10/04/Golang%E9%AB%98%E9%98%B6/">
+    <link itemprop="mainEntityOfPage" href="https://chalice-faith.github.io/2025/10/04/Golang%E9%AB%98%E9%98%B6/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -290,7 +570,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-10-05 18:18:27" itemprop="dateModified" datetime="2025-10-05T18:18:27+08:00">2025-10-05</time>
+                <time title="修改时间：2025-10-05 21:02:51" itemprop="dateModified" datetime="2025-10-05T21:02:51+08:00">2025-10-05</time>
               </span>
 
           
@@ -304,7 +584,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="Go-Modules"><a href="#Go-Modules" class="headerlink" title="Go Modules"></a>Go Modules</h1><h4 id="什么是Go-Modules"><a href="#什么是Go-Modules" class="headerlink" title="什么是Go Modules?"></a>什么是Go Modules?</h4><p>Go modules 是 Go 语言的依赖解决方案，发布于 Go1.11，成长于 Go1.12，丰富于 Go1.13，正式于 Go1.14 推荐在生产上使用。</p>
+          <h2 id="Go-Modules"><a href="#Go-Modules" class="headerlink" title="Go Modules"></a>Go Modules</h2><h4 id="什么是Go-Modules"><a href="#什么是Go-Modules" class="headerlink" title="什么是Go Modules?"></a>什么是Go Modules?</h4><p>Go modules 是 Go 语言的依赖解决方案，发布于 Go1.11，成长于 Go1.12，丰富于 Go1.13，正式于 Go1.14 推荐在生产上使用。</p>
 <p>Go moudles 目前集成在 Go 的工具链中，只要安装了 Go，自然而然也就可以使用 Go moudles 了，而 Go modules 的出现也解决了在 Go1.11 前的几个常见争议问题：</p>
 <ol>
 <li>Go 语言长久以来的依赖管理问题。</li>
@@ -481,7 +761,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2025/10/02/Golang%E8%AF%AD%E6%B3%95%E6%96%B0%E5%A5%87/">
+    <link itemprop="mainEntityOfPage" href="https://chalice-faith.github.io/2025/10/02/Golang%E8%AF%AD%E6%B3%95%E6%96%B0%E5%A5%87/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -512,7 +792,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-10-05 18:22:44" itemprop="dateModified" datetime="2025-10-05T18:22:44+08:00">2025-10-05</time>
+                <time title="修改时间：2025-10-05 20:27:51" itemprop="dateModified" datetime="2025-10-05T20:27:51+08:00">2025-10-05</time>
               </span>
 
           
@@ -796,6 +1076,149 @@
 <p>或者如下使用方法</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">sqlQuote</span><span class="params">(x <span class="keyword">interface</span>&#123;&#125;)</span></span> <span class="type">string</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> x == <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;NULL&quot;</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> _, ok := x.(<span class="type">int</span>); ok &#123;</span><br><span class="line">        <span class="keyword">return</span> fmt.Sprintf(<span class="string">&quot;%d&quot;</span>, x)</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> _, ok := x.(<span class="type">uint</span>); ok &#123;</span><br><span class="line">        <span class="keyword">return</span> fmt.Sprintf(<span class="string">&quot;%d&quot;</span>, x)</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> b, ok := x.(<span class="type">bool</span>); ok &#123;</span><br><span class="line">        <span class="keyword">if</span> b &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="string">&quot;TRUE&quot;</span></span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;FALSE&quot;</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> s, ok := x.(<span class="type">string</span>); ok &#123;</span><br><span class="line">        <span class="keyword">return</span> sqlQuoteString(s) <span class="comment">// (not shown)</span></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="built_in">panic</span>(fmt.Sprintf(<span class="string">&quot;unexpected type %T: %v&quot;</span>, x, x))</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
+<h2 id="反射reflect"><a href="#反射reflect" class="headerlink" title="反射reflect"></a>反射reflect</h2><h4 id="编程语言中反射的概念"><a href="#编程语言中反射的概念" class="headerlink" title="编程语言中反射的概念"></a>编程语言中反射的概念</h4><p>在计算机科学领域，反射是指一类应用，它们能够自描述和自控制。也就是说，这类应用通过采用某种机制来实现对自己行为的描述（self-representation）和监测（examination），并能根据自身行为的状态和结果，调整或修改应用所描述行为的状态和相关的语义。</p>
+<p>每种语言的反射模型都不同，并且有些语言根本不支持反射。Golang语言实现了反射，反射机制就是在运行时动态的调用对象的方法和属性，官方自带的reflect包就是反射相关的，只要包含这个包就可以使用。</p>
+<p>多插一句，Golang的gRPC也是通过反射实现的。</p>
+<h4 id="interface-和-反射"><a href="#interface-和-反射" class="headerlink" title="interface 和 反射"></a>interface 和 反射</h4><p>在讲反射之前，先来看看Golang关于类型设计的一些原则</p>
+<ul>
+<li>变量包括（type, value）两部分</li>
+<li>type 包括 <code>static type</code>和<code>concrete type</code>. 简单来说 <code>static type</code>是你在编码是看见的类型(如int、string)，<code>concrete type</code>是<code>runtime</code>系统看见的类型</li>
+<li>类型断言能否成功，取决于变量的<code>concrete type</code>，而不是<code>static type</code>. 因此，一个 <code>reader</code>变量如果它的<code>concrete type</code>也实现了<code>write</code>方法的话，它也可以被类型断言为<code>writer</code>.</li>
+</ul>
+<p>接下来要讲的<code>反射</code>，就是建立在类型之上的，Golang的指定类型的变量的类型是静态的（也就是指定int、string这些的变量，它的type是static type），在创建变量的时候就已经确定，反射主要与Golang的interface类型相关（它的type是concrete type），只有interface类型才有反射一说。</p>
+<p>在Golang的实现中，每个interface变量都有一个对应pair，pair中记录了实际变量的值和类型:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(value, <span class="keyword">type</span>)</span><br></pre></td></tr></table></figure>
+
+<p>value是实际变量值，type是实际变量的类型。一个interface{}类型的变量包含了2个指针，一个指针指向值的类型【对应concrete type】，另外一个指针指向实际的值【对应value】。</p>
+<p>例如，创建类型为*os.File的变量，然后将其赋给一个接口变量r：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">tty, err := os.OpenFile(<span class="string">&quot;/dev/tty&quot;</span>, os.O_RDWR, <span class="number">0</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> r io.Reader</span><br><span class="line">r = tty</span><br></pre></td></tr></table></figure>
+
+<p>接口变量r的pair中将记录如下信息：(tty, *os.File)，这个pair在接口变量的连续赋值过程中是不变的，将接口变量r赋给另一个接口变量w:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> w io.Writer</span><br><span class="line">w = r.(io.Writer)</span><br></pre></td></tr></table></figure>
+
+<p>接口变量w的pair与r的pair相同，都是:(tty, *os.File)，即使w是空接口类型，pair也是不变的。</p>
+<p>interface及其pair的存在，是Golang中实现反射的前提，理解了pair，就更容易理解反射。反射就是用来检测存储在接口变量内部(值value；类型concrete type) pair对的一种机制。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">	<span class="string">&quot;io&quot;</span></span><br><span class="line">	<span class="string">&quot;os&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	tty, err := os.OpenFile(<span class="string">&quot;/dev/tty&quot;</span>, os.O_RDWR, <span class="number">0</span>)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		fmt.Println(<span class="string">&quot;open file error&quot;</span>, err)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">var</span> r io.Reader</span><br><span class="line">	r = tty</span><br><span class="line"></span><br><span class="line">	<span class="keyword">var</span> w io.Writer</span><br><span class="line">	w = r.(io.Writer)</span><br><span class="line">	w.Write([]<span class="type">byte</span>(<span class="string">&quot;HELLO THIS IS A TEST!!!\n&quot;</span>))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在比如:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Reader <span class="keyword">interface</span> &#123;</span><br><span class="line">	ReadBook()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Writer <span class="keyword">interface</span> &#123;</span><br><span class="line">	WriteBook()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//具体类型</span></span><br><span class="line"><span class="keyword">type</span> Book <span class="keyword">struct</span> &#123;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Book)</span></span> ReadBook() &#123;</span><br><span class="line">	fmt.Println(<span class="string">&quot;Read a book.&quot;</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Book)</span></span> WriteBook() &#123;</span><br><span class="line">	fmt.Println(<span class="string">&quot;Write a book.&quot;</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	b := &amp;Book&#123;&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">var</span> r Reader</span><br><span class="line">	r = b</span><br><span class="line"></span><br><span class="line">	r.ReadBook()</span><br><span class="line"></span><br><span class="line">	<span class="keyword">var</span> w Writer</span><br><span class="line">	w = r.(Writer)</span><br><span class="line">	w.WriteBook()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="Golang的反射reflect"><a href="#Golang的反射reflect" class="headerlink" title="Golang的反射reflect"></a>Golang的反射reflect</h4><p><strong>reflect的基本功能TypeOf和ValueOf</strong></p>
+<p>既然反射就是用来检测存储在接口变量内部(值value；类型concrete type) pair对的一种机制。那么在Golang的reflect反射包中有什么样的方式可以让我们直接获取到变量内部的信息呢？ 它提供了两种类型（或者说两个方法）让我们可以很容易的访问接口变量内容，分别是reflect.ValueOf() 和 reflect.TypeOf()，看看官方的解释</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ValueOf returns a new Value initialized to the concrete value</span></span><br><span class="line"><span class="comment">// stored in the interface i.  ValueOf(nil) returns the zero </span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">ValueOf</span><span class="params">(i <span class="keyword">interface</span>&#123;&#125;)</span></span> Value &#123;...&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//ValueOf用来获取输入参数接口中的数据的值，如果接口为空则返回0</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">// TypeOf returns the reflection Type that represents the dynamic type of i.</span></span><br><span class="line"><span class="comment">// If i is a nil interface value, TypeOf returns nil.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">TypeOf</span><span class="params">(i <span class="keyword">interface</span>&#123;&#125;)</span></span> Type &#123;...&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//TypeOf用来动态获取输入参数接口中的值的类型，如果接口为空则返回nil</span></span><br></pre></td></tr></table></figure>
+
+<p>reflect.TypeOf()是获取pair中的type，reflect.ValueOf()获取pair中的value，示例如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line">    <span class="string">&quot;reflect&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">var</span> num <span class="type">float64</span> = <span class="number">1.2345</span></span><br><span class="line"></span><br><span class="line">    fmt.Println(<span class="string">&quot;type: &quot;</span>, reflect.TypeOf(num))</span><br><span class="line">    fmt.Println(<span class="string">&quot;value: &quot;</span>, reflect.ValueOf(num))</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">运行结果:</span><br><span class="line"><span class="keyword">type</span>:  <span class="type">float64</span></span><br><span class="line">value:  <span class="number">1.2345</span></span><br></pre></td></tr></table></figure>
+
+<p>说明</p>
+<ol>
+<li>reflect.TypeOf： 直接给到了我们想要的type类型，如float64、int、各种pointer、struct 等等真实的类型</li>
+<li>reflect.ValueOf：直接给到了我们想要的具体的值，如1.2345这个具体数值，或者类似&amp;{1 “Allen.Wu” 25} 这样的结构体struct的值</li>
+<li>也就是说明反射可以将“接口类型变量”转换为“反射类型对象”，反射类型指的是reflect.Type和reflect.Value这两种</li>
+</ol>
+<p><strong>从relfect.Value中获取接口interface的信息</strong></p>
+<p>当执行reflect.ValueOf(interface)之后，就得到了一个类型为”relfect.Value”变量，可以通过它本身的Interface()方法获得接口变量的真实内容，然后可以通过类型判断进行转换，转换为原有真实类型。不过，我们可能是已知原有类型，也有可能是未知原有类型，因此，下面分两种情况进行说明。</p>
+<p><em>已知原有类型</em>【进行“强制转换”】</p>
+<p>已知类型后转换为其对应的类型的做法如下，直接通过Interface方法然后强制转换，如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">realValue := value.Interface().(已知的类型)</span><br></pre></td></tr></table></figure>
+
+<p>示例如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line">    <span class="string">&quot;reflect&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">var</span> num <span class="type">float64</span> = <span class="number">1.2345</span></span><br><span class="line"></span><br><span class="line">    pointer := reflect.ValueOf(&amp;num)</span><br><span class="line">    value := reflect.ValueOf(num)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 可以理解为“强制转换”，但是需要注意的时候，转换的时候，如果转换的类型不完全符合，则直接panic</span></span><br><span class="line">    <span class="comment">// Golang 对类型要求非常严格，类型一定要完全符合</span></span><br><span class="line">    <span class="comment">// 如下两个，一个是*float64，一个是float64，如果弄混，则会panic</span></span><br><span class="line">    convertPointer := pointer.Interface().(*<span class="type">float64</span>)</span><br><span class="line">    convertValue := value.Interface().(<span class="type">float64</span>)</span><br><span class="line"></span><br><span class="line">    fmt.Println(convertPointer)</span><br><span class="line">    fmt.Println(convertValue)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">运行结果：</span><br><span class="line"><span class="number">0xc42000e238</span></span><br><span class="line"><span class="number">1.2345</span></span><br></pre></td></tr></table></figure>
+
+<p>说明</p>
+<ol>
+<li>转换的时候，如果转换的类型不完全符合，则直接panic，类型要求非常严格！ </li>
+<li>转换的时候，要区分是指针还是指 </li>
+<li>也就是说反射可以将“反射类型对象”再重新转换为“接口类型变量”</li>
+</ol>
+<p>未知原有类型【遍历探测其Filed】</p>
+<p>很多情况下，我们可能并不知道其具体类型，那么这个时候，该如何做呢？需要我们进行遍历探测其Filed来得知，示例如下:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line">    <span class="string">&quot;reflect&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> User <span class="keyword">struct</span> &#123;</span><br><span class="line">    Id   <span class="type">int</span></span><br><span class="line">    Name <span class="type">string</span></span><br><span class="line">    Age  <span class="type">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(u User)</span></span> ReflectCallFunc() &#123;</span><br><span class="line">    fmt.Println(<span class="string">&quot;Allen.Wu ReflectCallFunc&quot;</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line"></span><br><span class="line">    user := User&#123;<span class="number">1</span>, <span class="string">&quot;Allen.Wu&quot;</span>, <span class="number">25</span>&#125;</span><br><span class="line"></span><br><span class="line">    DoFiledAndMethod(user)</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 通过接口来获取任意参数，然后一一揭晓</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">DoFiledAndMethod</span><span class="params">(input <span class="keyword">interface</span>&#123;&#125;)</span></span> &#123;</span><br><span class="line"></span><br><span class="line">    getType := reflect.TypeOf(input)</span><br><span class="line">    fmt.Println(<span class="string">&quot;get Type is :&quot;</span>, getType.Name())</span><br><span class="line"></span><br><span class="line">    getValue := reflect.ValueOf(input)</span><br><span class="line">    fmt.Println(<span class="string">&quot;get all Fields is:&quot;</span>, getValue)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 获取方法字段</span></span><br><span class="line">    <span class="comment">// 1. 先获取interface的reflect.Type，然后通过NumField进行遍历</span></span><br><span class="line">    <span class="comment">// 2. 再通过reflect.Type的Field获取其Field</span></span><br><span class="line">    <span class="comment">// 3. 最后通过Field的Interface()得到对应的value</span></span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; getType.NumField(); i++ &#123;</span><br><span class="line">        field := getType.Field(i)</span><br><span class="line">        value := getValue.Field(i).Interface()</span><br><span class="line">        fmt.Printf(<span class="string">&quot;%s: %v = %v\n&quot;</span>, field.Name, field.Type, value)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 获取方法</span></span><br><span class="line">    <span class="comment">// 1. 先获取interface的reflect.Type，然后通过.NumMethod进行遍历</span></span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; getType.NumMethod(); i++ &#123;</span><br><span class="line">        m := getType.Method(i)</span><br><span class="line">        fmt.Printf(<span class="string">&quot;%s: %v\n&quot;</span>, m.Name, m.Type)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">运行结果：</span><br><span class="line">get Type is : User</span><br><span class="line">get all Fields is: &#123;<span class="number">1</span> Allen.Wu <span class="number">25</span>&#125;</span><br><span class="line">Id: <span class="type">int</span> = <span class="number">1</span></span><br><span class="line">Name: <span class="type">string</span> = Allen.Wu</span><br><span class="line">Age: <span class="type">int</span> = <span class="number">25</span></span><br><span class="line">ReflectCallFunc: <span class="function"><span class="keyword">func</span><span class="params">(main.User)</span></span></span><br></pre></td></tr></table></figure>
+
+<p>说明</p>
+<p>通过运行结果可以得知获取未知类型的interface的具体变量及其类型的步骤为：</p>
+<ol>
+<li>先获取interface的reflect.Type，然后通过NumField进行遍历</li>
+<li>再通过reflect.Type的Field获取其Field</li>
+<li>最后通过Field的Interface()得到对应的value</li>
+</ol>
+<p>通过运行结果可以得知获取未知类型的interface的所属方法（函数）的步骤为：</p>
+<ol>
+<li>先获取interface的reflect.Type，然后通过NumMethod进行遍历</li>
+<li>再分别通过reflect.Type的Method获取对应的真实的方法（函数）</li>
+<li>最后对结果取其Name和Type得知具体的方法名</li>
+<li>也就是说反射可以将“反射类型对象”再重新转换为“接口类型变量”</li>
+<li>struct 或者 struct 的嵌套都是一样的判断处理方式</li>
+</ol>
+<h5 id="通过reflect-Value设置实际变量的值"><a href="#通过reflect-Value设置实际变量的值" class="headerlink" title="通过reflect.Value设置实际变量的值"></a>通过reflect.Value设置实际变量的值</h5><p>reflect.Value是通过reflect.ValueOf(X)获得的，只有当X是指针的时候，才可以通过reflec.Value修改实际变量X的值，即：要修改反射类型的对象就一定要保证其值是“addressable”的。</p>
+<p>示例如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line">    <span class="string">&quot;reflect&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">var</span> num <span class="type">float64</span> = <span class="number">1.2345</span></span><br><span class="line">    fmt.Println(<span class="string">&quot;old value of pointer:&quot;</span>, num)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 通过reflect.ValueOf获取num中的reflect.Value，注意，参数必须是指针才能修改其值</span></span><br><span class="line">    pointer := reflect.ValueOf(&amp;num)</span><br><span class="line">    newValue := pointer.Elem()</span><br><span class="line"></span><br><span class="line">    fmt.Println(<span class="string">&quot;type of pointer:&quot;</span>, newValue.Type())</span><br><span class="line">    fmt.Println(<span class="string">&quot;settability of pointer:&quot;</span>, newValue.CanSet())</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 重新赋值</span></span><br><span class="line">    newValue.SetFloat(<span class="number">77</span>)</span><br><span class="line">    fmt.Println(<span class="string">&quot;new value of pointer:&quot;</span>, num)</span><br><span class="line"></span><br><span class="line">    <span class="comment">////////////////////</span></span><br><span class="line">    <span class="comment">// 如果reflect.ValueOf的参数不是指针，会如何？</span></span><br><span class="line">    pointer = reflect.ValueOf(num)</span><br><span class="line">    <span class="comment">//newValue = pointer.Elem() // 如果非指针，这里直接panic，“panic: reflect: call of reflect.Value.Elem on float64 Value”</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">运行结果：</span><br><span class="line">old value of pointer: <span class="number">1.2345</span></span><br><span class="line"><span class="keyword">type</span> of pointer: <span class="type">float64</span></span><br><span class="line">settability of pointer: <span class="literal">true</span></span><br><span class="line"><span class="built_in">new</span> value of pointer: <span class="number">77</span></span><br></pre></td></tr></table></figure>
+
+<p>说明</p>
+<p>需要传入的参数是* float64这个指针，然后可以通过pointer.Elem()去获取所指向的Value，<strong>注意一定要是指针</strong>。</p>
+<p>如果传入的参数不是指针，而是变量，那么 </p>
+<ul>
+<li>通过Elem获取原始值对应的对象则直接panic</li>
+<li>通过CanSet方法查询是否可以设置返回false</li>
+</ul>
+<p>newValue.CantSet()表示是否可以重新设置其值，如果输出的是true则可修改，否则不能修改，修改完之后再进行打印发现真的已经修改了。</p>
+<p>reflect.Value.Elem() 表示获取原始值对应的反射对象，只有原始对象才能修改，当前反射对象是不能修改的</p>
+<p>也就是说如果要修改反射类型对象，其值必须是“addressable”【对应的要传入的是指针，同时要通过Elem方法获取原始值对应的反射对象】</p>
+<p>struct 或者 struct 的嵌套都是一样的判断处理方式</p>
+<h5 id="通过reflect-ValueOf来进行方法的调用"><a href="#通过reflect-ValueOf来进行方法的调用" class="headerlink" title="通过reflect.ValueOf来进行方法的调用"></a>通过reflect.ValueOf来进行方法的调用</h5><p>这算是一个高级用法了，前面我们只说到对类型、变量的几种反射的用法，包括如何获取其值、其类型、如果重新设置新值。但是在工程应用中，另外一个常用并且属于高级的用法，就是通过reflect来进行方法【函数】的调用。比如我们要做框架工程的时候，需要可以随意扩展方法，或者说用户可以自定义方法，那么我们通过什么手段来扩展让用户能够自定义呢？关键点在于用户的自定义方法是未可知的，因此我们可以通过reflect来搞定</p>
+<p>示例如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line">    <span class="string">&quot;reflect&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> User <span class="keyword">struct</span> &#123;</span><br><span class="line">    Id   <span class="type">int</span></span><br><span class="line">    Name <span class="type">string</span></span><br><span class="line">    Age  <span class="type">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(u User)</span></span> ReflectCallFuncHasArgs(name <span class="type">string</span>, age <span class="type">int</span>) &#123;</span><br><span class="line">    fmt.Println(<span class="string">&quot;ReflectCallFuncHasArgs name: &quot;</span>, name, <span class="string">&quot;, age:&quot;</span>, age, <span class="string">&quot;and origal User.Name:&quot;</span>, u.Name)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(u User)</span></span> ReflectCallFuncNoArgs() &#123;</span><br><span class="line">    fmt.Println(<span class="string">&quot;ReflectCallFuncNoArgs&quot;</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 如何通过反射来进行方法的调用？</span></span><br><span class="line"><span class="comment">// 本来可以用u.ReflectCallFuncXXX直接调用的，但是如果要通过反射，那么首先要将方法注册，也就是MethodByName，然后通过反射调动mv.Call</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    user := User&#123;<span class="number">1</span>, <span class="string">&quot;Allen.Wu&quot;</span>, <span class="number">25</span>&#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 1. 要通过反射来调用起对应的方法，必须要先通过reflect.ValueOf(interface)来获取到reflect.Value，得到“反射类型对象”后才能做下一步处理</span></span><br><span class="line">    getValue := reflect.ValueOf(user)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 一定要指定参数为正确的方法名</span></span><br><span class="line">    <span class="comment">// 2. 先看看带有参数的调用方法</span></span><br><span class="line">    methodValue := getValue.MethodByName(<span class="string">&quot;ReflectCallFuncHasArgs&quot;</span>)</span><br><span class="line">    args := []reflect.Value&#123;reflect.ValueOf(<span class="string">&quot;wudebao&quot;</span>), reflect.ValueOf(<span class="number">30</span>)&#125;</span><br><span class="line">    methodValue.Call(args)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 一定要指定参数为正确的方法名</span></span><br><span class="line">    <span class="comment">// 3. 再看看无参数的调用方法</span></span><br><span class="line">    methodValue = getValue.MethodByName(<span class="string">&quot;ReflectCallFuncNoArgs&quot;</span>)</span><br><span class="line">    args = <span class="built_in">make</span>([]reflect.Value, <span class="number">0</span>)</span><br><span class="line">    methodValue.Call(args)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">运行结果：</span><br><span class="line">ReflectCallFuncHasArgs name:  wudebao , age: <span class="number">30</span> and origal User.Name: Allen.Wu</span><br><span class="line">ReflectCallFuncNoArgs</span><br></pre></td></tr></table></figure>
+
+<p>说明</p>
+<ol>
+<li>要通过反射来调用起对应的方法，必须要先通过reflect.ValueOf(interface)来获取到reflect.Value，得到“反射类型对象”后才能做下一步处理</li>
+<li>reflect.Value.MethodByName这.MethodByName，需要指定准确真实的方法名字，如果错误将直接panic，MethodByName返回一个函数值对应的reflect.Value方法的名字。</li>
+<li>[]reflect.Value，这个是最终需要调用的方法的参数，可以没有或者一个或者多个，根据实际参数来定。</li>
+<li>reflect.Value的 Call 这个方法，这个方法将最终调用真实的方法，参数务必保持一致，如果reflect.Value’Kind不是一个方法，那么将直接panic。</li>
+<li>本来可以用u.ReflectCallFuncXXX直接调用的，但是如果要通过反射，那么首先要将方法注册，也就是MethodByName，然后通过反射调用methodValue.Call</li>
+</ol>
+<h4 id="Golang的反射reflect性能"><a href="#Golang的反射reflect性能" class="headerlink" title="Golang的反射reflect性能"></a>Golang的反射reflect性能</h4><p>Golang的反射很慢，这个和它的API设计有关。在 java 里面，我们一般使用反射都是这样来弄的。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Field field = clazz.getField(<span class="string">&quot;hello&quot;</span>);</span><br><span class="line">field.get(obj1);</span><br><span class="line">field.get(obj2);</span><br></pre></td></tr></table></figure>
+
+<p>这个取得的反射对象类型是 java.lang.reflect.Field。它是可以复用的。只要传入不同的obj，就可以取得这个obj上对应的 field。但是Golang的反射不是这样设计的:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">type_ := reflect.TypeOf(obj)</span><br><span class="line">field, _ := type_.FieldByName(<span class="string">&quot;hello&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>这里取出来的 field 对象是 reflect.StructField 类型，但是它没有办法用来取得对应对象上的值。如果要取值，得用另外一套对object，而不是type的反射</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">type_ := reflect.ValueOf(obj)</span><br><span class="line">fieldValue := type_.FieldByName(<span class="string">&quot;hello&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>这里取出来的 fieldValue 类型是 reflect.Value，它是一个具体的值，而不是一个可复用的反射对象了，每次反射都需要malloc这个reflect.Value结构体，并且还涉及到GC。</p>
+<p>Golang reflect慢主要有两个原因</p>
+<ol>
+<li>涉及到内存分配以及后续的GC；</li>
+<li>reflect实现里面有大量的枚举，也就是for循环，比如类型之类的.</li>
+</ol>
+<h4 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h4><p>上述详细说明了Golang的反射reflect的各种功能和用法，都附带有相应的示例，相信能够在工程应用中进行相应实践，总结一下就是：</p>
+<ul>
+<li><p>反射可以大大提高程序的灵活性，使得interface{}有更大的发挥余地 </p>
+</li>
+<li><p>反射必须结合interface才玩得转</p>
+</li>
+<li><p>变量的type要是concrete type的（也就是interface变量）才有反射一说</p>
+</li>
+<li><p>反射可以将“接口类型变量”转换为“反射类型对象” </p>
+</li>
+<li><p>反射使用 TypeOf 和 ValueOf 函数从接口中获取目标对象信息</p>
+</li>
+<li><p>反射可以将“反射类型对象”转换为“接口类型变量 </p>
+</li>
+<li><p>reflect.value.Interface().(已知的类型)</p>
+</li>
+<li><p>遍历reflect.Type的Field获取其Field</p>
+</li>
+<li><p>反射可以修改反射类型对象，但是其值必须是“addressable” </p>
+</li>
+<li><p>想要利用反射修改对象状态，前提是 interface.data 是 settable,即 pointer-interface</p>
+</li>
+<li><p>通过反射可以“动态”调用方法</p>
+</li>
+<li><p>因为Golang本身不支持模板，因此在以往需要使用模板的场景下往往就需要使用反射(reflect)来实现</p>
+</li>
+</ul>
 
       
     </div>
@@ -815,7 +1238,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2025/10/01/Docker%E5%AE%9E%E6%88%98%E6%94%BB%E7%95%A5/">
+    <link itemprop="mainEntityOfPage" href="https://chalice-faith.github.io/2025/10/01/Docker%E5%AE%9E%E6%88%98%E6%94%BB%E7%95%A5/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -846,7 +1269,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-10-02 20:56:11" itemprop="dateModified" datetime="2025-10-02T20:56:11+08:00">2025-10-02</time>
+                <time title="修改时间：2025-10-05 21:13:43" itemprop="dateModified" datetime="2025-10-05T21:13:43+08:00">2025-10-05</time>
               </span>
 
           
@@ -945,7 +1368,7 @@
 <p><strong>端口映射</strong></p>
 <p>容器的网络和宿主机的网络是隔离的，例如运行了一个 Nginx 容器，容器内的 Nginx 监听了 80 端口。这时通过宿主机的 80 端口是无法访问到 Nginx 服务的。</p>
 <p>所以需要 <code>-p {宿主机端口}:{容器端口}</code> 命令进行映射，例如 <code>-p 8080:80</code> 标识将 Nginx 容器的 80 端口映射到宿主机的 8080 端口。</p>
-<p><img src="/.com//2388739180.webp" alt="410974927562106.webp"></p>
+<p><img src="/.com//docker1.webp"></p>
 <p><strong>目录映射（绑定挂载）</strong></p>
 <p>与端口映射类似的就是目录映射，将容器外和容器内的目录进行绑定，容器内对文件的修改会影响宿主机的文件夹，宿主机的修改也会影响容器内文件夹。这种目录也被称为 挂载卷，他的最大作用是数据的持久化。 当容器删除时，容器内的所有数据都会被删除，但通过挂载卷映射到宿主机的文件夹将得以保留。</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -d -p 8080:80 -v ./:/usr/share/nginx/html nginx</span><br></pre></td></tr></table></figure>
@@ -1055,7 +1478,7 @@
 <p>使用子网还有一个好处，同一个子网内的容器，可以直接使用容器名称互相访问，而不必使用内部的 IP 地址。</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 创建一个 名叫 network1 的子网</span></span><br><span class="line">docker network create network1</span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建一个 nginx 容器 使用 network1 的子网</span></span><br><span class="line">docker run -d --network network1 nginx</span><br></pre></td></tr></table></figure>
 
-<p><img src="/.com//3248723247.webp" alt="116224390346617.webp"></p>
+<p><img src="/.com//docker2.webp"></p>
 <h3 id="HOST-模式"><a href="#HOST-模式" class="headerlink" title="HOST 模式"></a>HOST 模式</h3><p>host 模式下，docker 容器直接共享宿主机的网络，容器直接使用宿主机的 IP 地址，无需 <code>-p</code> 参数进行端口映射，容器内的服务直接运行在宿主机的端口上，通过宿主机的 IP 和端口就能访问到容器中服务。</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -d --network host nginx</span><br></pre></td></tr></table></figure>
 
@@ -1080,7 +1503,7 @@
 <p>多应用的最佳实践，是把每一个模块都打包成一个独立的容器。但这样多容器 增加了很多使用成本，因为想创建多个 容器 就要多次使用 docker run ，还需要配置容器之间的网络环境，尝试管理这些容器时，一个遗漏就会导致很多问题，并且若让其他人部署项目，如果操作者对部署流程不熟悉 也会导致各种问题的发生。</p>
 <p>这个时候，容器编排技术就很有用了，也就是 <strong>Docker Compose</strong>，它使用 yml 文件 管理多个容器，在这个文件中记录了容器之间时如何创建以及如何协同工作的，我们可以简单的把 Docker Compose 文件理解成一个或多个 Docker run 命令，按照特定的格式书写到一个文件中，</p>
 <p>Docker Compose 格式如下：</p>
-<p><img src="/.com//777337666.webp" alt="254110120740349.webp"></p>
+<p><img src="/.com//docker3.webp"></p>
 <ul>
 <li>右侧最顶级的就是 Services 元素，每个元素就对应一个 Services</li>
 <li>左侧的 <code>--name</code> 在右侧就变成了 services 名</li>
@@ -1129,7 +1552,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2025/10/01/Golang%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE/">
+    <link itemprop="mainEntityOfPage" href="https://chalice-faith.github.io/2025/10/01/Golang%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -1208,7 +1631,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/25/C-%E7%9A%84%E7%A7%BB%E5%8A%A8%E8%AF%AD%E4%B9%89%E5%92%8C%E5%AE%8C%E7%BE%8E%E8%BD%AC%E5%8F%91/">
+    <link itemprop="mainEntityOfPage" href="https://chalice-faith.github.io/2025/09/25/C++%E7%9A%84%E7%A7%BB%E5%8A%A8%E8%AF%AD%E4%B9%89%E5%92%8C%E5%AE%8C%E7%BE%8E%E8%BD%AC%E5%8F%91/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -1222,7 +1645,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2025/09/25/C-%E7%9A%84%E7%A7%BB%E5%8A%A8%E8%AF%AD%E4%B9%89%E5%92%8C%E5%AE%8C%E7%BE%8E%E8%BD%AC%E5%8F%91/" class="post-title-link" itemprop="url">C++的移动语义和完美转发</a>
+            <a href="/2025/09/25/C++%E7%9A%84%E7%A7%BB%E5%8A%A8%E8%AF%AD%E4%B9%89%E5%92%8C%E5%AE%8C%E7%BE%8E%E8%BD%AC%E5%8F%91/" class="post-title-link" itemprop="url">C++的移动语义和完美转发</a>
         </h2>
 
         <div class="post-meta">
@@ -1295,7 +1718,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/24/%E5%8D%95%E4%BE%8B%E6%A8%A1%E5%BC%8FII/">
+    <link itemprop="mainEntityOfPage" href="https://chalice-faith.github.io/2025/09/24/%E5%8D%95%E4%BE%8B%E6%A8%A1%E5%BC%8FII/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -1363,7 +1786,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/23/%E5%8D%95%E4%BE%8B%E6%A8%A1%E5%BC%8F/">
+    <link itemprop="mainEntityOfPage" href="https://chalice-faith.github.io/2025/09/23/%E5%8D%95%E4%BE%8B%E6%A8%A1%E5%BC%8F/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -1420,265 +1843,6 @@
 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">SinglePointer* SinglePointer::single = <span class="literal">nullptr</span>;</span><br><span class="line">std::mutex SinglePointer::s_mutex;</span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">thread_func_lazy</span><span class="params">(<span class="type">int</span> i)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;this is lazy thread &quot;</span> &lt;&lt; i &lt;&lt; std::endl;</span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;inst is &quot;</span> &lt;&lt; SinglePointer::<span class="built_in">GetInst</span>() &lt;&lt; std::endl;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">test_singlelazy</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; <span class="number">3</span>; i++)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="function">std::thread <span class="title">tid</span><span class="params">(thread_func_lazy, i)</span></span>;</span><br><span class="line">        tid.<span class="built_in">join</span>();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//何时释放new的对象？造成内存泄漏</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>这种方式存在一个很严重的问题，就是当多个线程都调用单例函数时，我们不确定资源是被哪个线程初始化的。<br>回收指针存在问题，存在多重释放或者不知道哪个指针释放的问题。</p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/22/%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8hexo%E9%83%A8%E7%BD%B2%E4%BD%A0%E7%9A%84%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Chalice">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Chalice 的技术博客">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2025/09/22/%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8hexo%E9%83%A8%E7%BD%B2%E4%BD%A0%E7%9A%84%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/" class="post-title-link" itemprop="url">如何使用hexo部署你的个人博客</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2025-09-22 23:01:32 / 修改时间：23:05:41" itemprop="dateCreated datePublished" datetime="2025-09-22T23:01:32+08:00">2025-09-22</time>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="本地搭建"><a href="#本地搭建" class="headerlink" title="本地搭建"></a>本地搭建</h1><h2 id="1-本地搭建-Hexo-博客"><a href="#1-本地搭建-Hexo-博客" class="headerlink" title="1. 本地搭建 Hexo 博客"></a>1. 本地搭建 Hexo 博客</h2><ul>
-<li>全局安装 hexo 脚手架</li>
-</ul>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npm install -g hexo-cli</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>新建文件夹 blog，利用脚手架生成博客工程</li>
-</ul>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mkdir blog</span><br><span class="line">cd blog</span><br><span class="line">hexo init</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>安装依赖，运行项目</li>
-</ul>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">npm i</span><br><span class="line">hexo server</span><br></pre></td></tr></table></figure>
-
-<p>之后，访问 localhost:4000 就能看到我们的博客。</p>
-<p>到目前为止，我们的简易博客就搭建完成了，但是整个博客功能比较简单，我们再来了解一下其他的个性化配置。</p>
-<h2 id="2-个性化配置"><a href="#2-个性化配置" class="headerlink" title="2. 个性化配置"></a>2. 个性化配置</h2><h3 id="2-1-更换主题"><a href="#2-1-更换主题" class="headerlink" title="2.1 更换主题"></a>2.1 更换主题</h3><p>Hexo 主题列表可以在官方查找 <a target="_blank" rel="noopener" href="https://hexo.io/themes/">https://hexo.io/themes/</a></p>
-<p>也可以在 github 上查找 <a target="_blank" rel="noopener" href="https://github.com/search?q=hexo-theme">https://github.com/search?q=hexo-theme</a></p>
-<h4 id="推荐几个优秀主题"><a href="#推荐几个优秀主题" class="headerlink" title="推荐几个优秀主题"></a>推荐几个优秀主题</h4><table>
-<thead>
-<tr>
-<th><strong>主题</strong></th>
-<th><strong>github地址</strong></th>
-<th><strong>简介</strong></th>
-<th>github star（25.1）</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>NexT</td>
-<td><a target="_blank" rel="noopener" href="https://github.com/theme-next/hexo-theme-next">https://github.com/theme-next/hexo-theme-next</a></td>
-<td>NexT 是 Hexo 最受欢迎的主题之一，设计简洁且功能强大</td>
-<td>8.2k</td>
-</tr>
-<tr>
-<td>Butterfly</td>
-<td><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">https://github.com/jerryc127/hexo-theme-butterfly</a></td>
-<td>Butterfly 是一个优雅且高度可定制的主题，适合个人博客</td>
-<td>7.4k</td>
-</tr>
-<tr>
-<td>Matery</td>
-<td><a target="_blank" rel="noopener" href="https://github.com/blinkfox/hexo-theme-matery">https://github.com/blinkfox/hexo-theme-matery</a></td>
-<td>Matery 是一个 Material Design 风格的主题，适合技术博客</td>
-<td>5.3k</td>
-</tr>
-<tr>
-<td>Yilia</td>
-<td><a target="_blank" rel="noopener" href="https://github.com/litten/hexo-theme-yilia">https://github.com/litten/hexo-theme-yilia</a></td>
-<td>Yilia 是一个简洁且响应式的主题，适合写作和阅读</td>
-<td>8.4k</td>
-</tr>
-<tr>
-<td>Icarus</td>
-<td><a target="_blank" rel="noopener" href="https://github.com/ppoffice/hexo-theme-icarus">https://github.com/ppoffice/hexo-theme-icarus</a></td>
-<td>Icarus 是一个现代化的主题，支持多种插件和自定义配置</td>
-<td>6.4k</td>
-</tr>
-</tbody></table>
-<h4 id="安装主题"><a href="#安装主题" class="headerlink" title="安装主题"></a>安装主题</h4><p>以 NexT 主题为例，安装步骤如下：</p>
-<ol>
-<li><strong>下载主题</strong>：</li>
-</ol>
-<p>在博客根目录下运行：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git clone https://github.com/theme-next/hexo-theme-next themes/next</span><br></pre></td></tr></table></figure>
-
-<ol>
-<li><strong>启用主题</strong>：</li>
-</ol>
-<p>编辑博客根目录下的 <code>_config.yml</code> 文件，修改 <code>theme</code> 字段：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">theme: next</span><br></pre></td></tr></table></figure>
-
-<ol>
-<li><strong>配置主题</strong>：</li>
-</ol>
-<p>根据需要编辑主题配置文件（通常是 <code>themes/next/_config.yml</code>）。NexT提供了三种不同的外观，可以挑选一个自己喜欢的，然后去掉其中一个的 # 号</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"># Schemes</span><br><span class="line">#scheme: Muse</span><br><span class="line">scheme: Mist</span><br><span class="line">#scheme: Pisces</span><br><span class="line">#scheme: Gemini</span><br></pre></td></tr></table></figure>
-
-<ol>
-<li><strong>重新生成并部署</strong>：</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"># 清除缓存</span><br><span class="line">hexo clean</span><br><span class="line"># 生成主题静态文件</span><br><span class="line">hexo generate</span><br><span class="line"># 启动服务</span><br><span class="line">hexo server</span><br></pre></td></tr></table></figure>
-
-<h3 id="2-2-更新博客基础信息"><a href="#2-2-更新博客基础信息" class="headerlink" title="2.2 更新博客基础信息"></a>2.2 更新博客基础信息</h3><p>博客基础信息可以在根目录的 <code>_config.yml</code> 文件配置，以本博客为例，更改如下</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"># Site</span><br><span class="line">title: webfem</span><br><span class="line">subtitle: &#x27;&#x27;</span><br><span class="line">description: 做有价值的博客</span><br><span class="line">keywords: 前端</span><br><span class="line">author: space</span><br><span class="line">language: zh-Hans</span><br><span class="line">timezone: &#x27;&#x27;</span><br></pre></td></tr></table></figure>
-
-<h3 id="2-3-首页文章截断"><a href="#2-3-首页文章截断" class="headerlink" title="2.3 首页文章截断"></a>2.3 首页文章截断</h3><ol>
-<li>每次写文章正文时，只需要在文章 .md 中需要截断的地方增加：</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;!--more--&gt;</span><br></pre></td></tr></table></figure>
-
-<ol>
-<li>打开 <code>/themes/next/_config.yml</code>，修改 <code>scroll_to_more</code> 这个选项设置为 <code>false</code> 。</li>
-</ol>
-<p><img src="https://cdn.webfem.com/webfem/cfc4f7b0-d191-11ef-aad8-11241f379ea9" alt="替换hexo的next主题.png"></p>
-<h3 id="2-4-修改博客-icon"><a href="#2-4-修改博客-icon" class="headerlink" title="2.4 修改博客 icon"></a>2.4 修改博客 icon</h3><p>浏览器左上角icon修改</p>
-<ol>
-<li>在 <code>/source</code> 目录下新建一个名为 <code>uploads</code> 的文件夹，将头像图片（如 <code>favicon.png</code>）放入该文件夹中。</li>
-<li>打开主题的配置文件（通常是 <code>/themes/next/_config.yml</code>），找到 <code>favicon</code> 相关字段，修改为你的图标文件路径。例如：</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">favicon:</span><br><span class="line">  small: /uploads/favicon.png  # 小图标（16x16）</span><br><span class="line">  medium: /uploads/favicon.png  # 中图标（32x32）</span><br><span class="line">  apple_touch_icon: /uploads/favicon.png  # Apple 设备图标</span><br><span class="line">  safari_pinned_tab: /uploads/favicon.png  # Safari 固定标签页图标</span><br></pre></td></tr></table></figure>
-
-<h2 id="3-修改导航"><a href="#3-修改导航" class="headerlink" title="3. 修改导航"></a>3. 修改导航</h2><p>页面的导航需要到具体的主题目录去修改，以next为例，需要到 &#x2F;themes&#x2F;next&#x2F;_config.yml文件，将menu字段修改为</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">menu:</span><br><span class="line">  home: / || fa fa-home</span><br><span class="line">  about: /about/ || fa fa-user</span><br><span class="line">  tags: /tags/ || fa fa-tags</span><br><span class="line">  categories: /categories/ || fa fa-th</span><br><span class="line">  archives: /archives/ || fa fa-archive</span><br></pre></td></tr></table></figure>
-
-<p>修改之后，我们还没有这个页面，需要手动加几个页面</p>
-<h3 id="3-1-创建分类页面"><a href="#3-1-创建分类页面" class="headerlink" title="3.1 创建分类页面"></a>3.1 创建分类页面</h3><ol>
-<li>使用以下命令新建一个名为 <code>categories</code> 的页面：</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hexo new page categories</span><br></pre></td></tr></table></figure>
-
-<ol>
-<li>编辑刚创建的页面文件 <code>/source/categories/index.md</code>，将页面类型设置为 <code>categories</code>。这样，主题会自动在该页面显示所有分类。注意保留冒号后的空格。</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">---</span><br><span class="line">title: Categories</span><br><span class="line">date: 2024-04-10 23:40:31</span><br><span class="line">type: &quot;categories&quot;</span><br><span class="line">comments: false</span><br><span class="line">---</span><br></pre></td></tr></table></figure>
-
-<h3 id="3-2-创建标签云页面"><a href="#3-2-创建标签云页面" class="headerlink" title="3.2 创建标签云页面"></a>3.2 创建标签云页面</h3><ol>
-<li>使用以下命令新建一个名为 <code>tags</code> 的页面：</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hexo new page &quot;tags&quot;</span><br></pre></td></tr></table></figure>
-
-<ol>
-<li>编辑刚创建的页面文件，将页面类型设置为 <code>tags</code>。这样，主题会自动在该页面显示标签云。</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">---</span><br><span class="line">title: Tags</span><br><span class="line">date: 2024-04-10 23:41:25</span><br><span class="line">type: &quot;tags&quot;</span><br><span class="line">comments: false</span><br><span class="line">---</span><br></pre></td></tr></table></figure>
-
-<hr>
-<h3 id="3-3-创建“关于我”页面"><a href="#3-3-创建“关于我”页面" class="headerlink" title="3.3 创建“关于我”页面"></a>3.3 创建“关于我”页面</h3><ol>
-<li>使用以下命令新建一个名为 <code>about</code> 的页面：</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hexo new page &quot;about&quot;</span><br></pre></td></tr></table></figure>
-
-<ol>
-<li>编辑刚创建的页面文件，可以在正文部分使用 Markdown 格式写下你的个人信息。</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">---</span><br><span class="line">title: About</span><br><span class="line">date: 2024-04-10 23:41:56</span><br><span class="line">comments: false</span><br><span class="line">---</span><br><span class="line"></span><br><span class="line">这是我博客的内容，欢迎阅读！</span><br></pre></td></tr></table></figure>
-
-<p>修改之后效果如下：</p>
-<p><img src="https://cdn.webfem.com/webfem/69b69ae0-d192-11ef-aad8-11241f379ea9" alt="hexo-category.png"></p>
-<h2 id="4-创建并编辑文章"><a href="#4-创建并编辑文章" class="headerlink" title="4. 创建并编辑文章"></a>4. 创建并编辑文章</h2><ol>
-<li>在博客根目录下执行以下命令，创建一篇新文章：</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hexo new &quot;我的第一篇文章&quot;</span><br></pre></td></tr></table></figure>
-
-<p>这会在 <code>source/_posts</code> 文件夹内生成一个 <code>.md</code> 文件。</p>
-<ol>
-<li>编辑该文件，修改起始字段如下：</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">---</span><br><span class="line">title: 文章的标题</span><br><span class="line">date: 创建日期 （文件的创建日期）</span><br><span class="line">updated: 修改日期 （文件的修改日期）</span><br><span class="line">comments: true  # 是否开启评论</span><br><span class="line">tags:</span><br><span class="line">  - 标签1</span><br><span class="line">  - 标签2</span><br><span class="line">categories:</span><br><span class="line">  - 分类1</span><br><span class="line">permalink: url中的名字（文件名）</span><br><span class="line">---</span><br></pre></td></tr></table></figure>
-
-<ol>
-<li><p>在 <code>---</code> 下方编写正文内容，遵循 Markdown 语法规则。</p>
-</li>
-<li><p>生成静态资源</p>
-</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hexo g</span><br></pre></td></tr></table></figure>
-
-<p>将 hello-word.md 的内容复制过来，效果如下</p>
-<p><img src="https://cdn.webfem.com/webfem/643af2f0-d192-11ef-aad8-11241f379ea9" alt="hexo-blog.png"></p>
-<h2 id="5-设置侧边栏"><a href="#5-设置侧边栏" class="headerlink" title="5. 设置侧边栏"></a>5. 设置侧边栏</h2><p>默认侧边栏非常简陋，需要再额外配置一下</p>
-<h3 id="5-1-设置侧边栏头像"><a href="#5-1-设置侧边栏头像" class="headerlink" title="5.1 设置侧边栏头像"></a>5.1 设置侧边栏头像</h3><ol>
-<li>在 <code>/source</code> 目录下新建一个名为 <code>uploads</code> 的文件夹，将头像图片（如 <code>avatar.jpg</code>）放入该文件夹中。</li>
-<li>打开主题配置文件 <code>/themes/next/_config.yml</code>，找到 <code>avatar</code> 字段，并修改为以下内容：</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">avatar:</span><br><span class="line">  url: /uploads/avatar.jpg  # 头像图片路径</span><br><span class="line">  rounded: true  # 是否显示为圆形头像</span><br></pre></td></tr></table></figure>
-
-<hr>
-<h3 id="5-2-设置侧边栏社交链接"><a href="#5-2-设置侧边栏社交链接" class="headerlink" title="5.2 设置侧边栏社交链接"></a>5.2 设置侧边栏社交链接</h3><ol>
-<li>编辑站点的 <code>_config.yml</code> 文件，找到 <code>social</code> 字段，添加社交站点名称与链接地址。格式为 <code>显示名称: 链接地址 || 图标类名</code>，例如：</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"># Social links</span><br><span class="line">social:</span><br><span class="line">  GitHub: https://github.com/your-user-name || fab fa-github</span><br><span class="line">  E-Mail: mailto:yourname@gmail.com || fa fa-envelope</span><br><span class="line">  Twitter: https://x.com/your-user-name || fab fa-twitter</span><br><span class="line">  # Weibo: https://weibo.com/yourname || fab fa-weibo</span><br><span class="line">  # Google: https://plus.google.com/yourname || fab fa-google</span><br></pre></td></tr></table></figure>
-
-<ol>
-<li>打开主题配置文件 <code>/themes/next/_config.yml</code>，在 <code>social_icons</code> 字段下添加社交站点名称与对应的图标类名。<code>enable</code> 选项用于控制是否显示图标，设置为 <code>false</code> 可以隐藏图标。例如：</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">social_icons:</span><br><span class="line">  enable: true  # 是否显示图标</span><br><span class="line">  GitHub: github  # GitHub 图标</span><br><span class="line">  Twitter: twitter  # Twitter 图标</span><br></pre></td></tr></table></figure>
-
-<h3 id="5-3-设置侧边栏友情链接"><a href="#5-3-设置侧边栏友情链接" class="headerlink" title="5.3 设置侧边栏友情链接"></a>5.3 设置侧边栏友情链接</h3><ol>
-<li>打开站点的 <code>_config.yml</code> 文件，找到 <code>links</code> 字段，添加友情链接的名称与地址。格式为 <code>显示名称: 链接地址</code>，例如：</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"># 友情链接</span><br><span class="line">links:</span><br><span class="line">  webfem: https://webfem.com  # 示例链接</span><br><span class="line">  Hexo: https://hexo.io  # Hexo 官网</span><br><span class="line">  GitHub: https://github.com  # GitHub 官网</span><br></pre></td></tr></table></figure>
-
-<ol>
-<li>打开主题配置文件 <code>/themes/next/_config.yml</code>，找到 <code>links_icon</code> 字段，设置是否显示友情链接的图标。例如：</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">links_icon: true  # 是否显示友情链接图标</span><br></pre></td></tr></table></figure>
-
-<ol>
-<li>如果需要自定义友情链接的图标，可以在 <code>links_settings</code> 字段下添加对应的图标类名。例如：</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"># Blog rolls</span><br><span class="line">links_settings:</span><br><span class="line">  icon: fa fa-link</span><br><span class="line">  title: 友情链接</span><br><span class="line">  # Available values: block | inline</span><br><span class="line">  layout: block</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.webfem.com/webfem/55694f10-d192-11ef-aad8-11241f379ea9" alt="hexo-blog-total.png"></p>
-<h1 id="服务端部署"><a href="#服务端部署" class="headerlink" title="服务端部署"></a>服务端部署</h1><ol>
-<li>将本地代码发布到服务器上，推荐通过github发布</li>
-<li>利用 PM2 执行如下代码即可</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pm2 start &quot;hexo server&quot; --name &quot;hexo-blog&quot;</span><br></pre></td></tr></table></figure>
-
-<p>后续更新文章，需要在本地写完之后，再推送到服务器</p>
 
       
     </div>
@@ -1763,7 +1927,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">11</span>
+          <span class="site-state-item-count">12</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
